@@ -14,7 +14,7 @@ export type SearchRequest = {
   order?: 'asc' | 'desc' | undefined;
 };
 
-export type SearchEntity = {
+type SearchEntity = {
   id: string;
   name: string;
   description?: string;

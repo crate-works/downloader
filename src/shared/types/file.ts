@@ -1,10 +1,10 @@
-export type MediaType = 'audio/wav' | 'audio/mpeg' | 'video/x-matroska' | 'video/x-msvideo' | 'video/mxf' | string;
+type MediaType = 'audio/wav' | 'audio/mpeg' | 'video/x-matroska' | 'video/x-msvideo' | 'video/mxf' | string;
 
 type QualityTier = 'archival' | 'presentation';
 
 type FileType = 'audio' | 'video' | 'other';
 
-export type FileAccess = {
+type FileAccess = {
   content: boolean;
 };
 
