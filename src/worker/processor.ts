@@ -1,6 +1,14 @@
 import { formatFileSize } from '#/shared/formatters.ts';
 import type { ExportFileInfo, ExportItemInfo, ExportJobMessage } from '#/shared/types/index.ts';
-import { completeJob, failJob, updateJobDownloadProgress, updateJobPhase, updateJobStreamedBytes, updateJobTotalSize } from './jobStore.ts';
+import {
+  completeJob,
+  failJob,
+  updateJobDownloadProgress,
+  updateJobGroupProgress,
+  updateJobPhase,
+  updateJobStreamedBytes,
+  updateJobTotalSize,
+} from './jobStore.ts';
 import { sendDownloadEmail } from './services/email.ts';
 import { fetchFileStream, fetchRoCrateMetadata, getEntityMetadata } from './services/rocrate.ts';
 import { generatePresignedUrl, uploadStreamToS3 } from './services/s3.ts';
@@ -25,6 +33,7 @@ const extractPathFromId = (entityId: string): string => {
 };
 
 const groupFilesByItem = async (
+  jobId: string,
   items: ExportItemInfo[],
   files: ExportFileInfo[],
   accessToken?: string,
@@ -32,6 +41,12 @@ const groupFilesByItem = async (
   const filesByItem: FilesByItem = new Map();
   const itemCache = new Map<string, string>(); // itemId -> collectionId
   let totalSize = 0;
+
+  // Grouping resolves the parent collection of every unique item via a network
+  // call each. Report progress against that set so the UI can show a bar.
+  const uniqueItemIds = new Set<string>([...items.map(({ id }) => id), ...files.map((file) => file.memberOf.id)]);
+  const totalItems = uniqueItemIds.size;
+  updateJobGroupProgress(jobId, 0, totalItems);
 
   const resolveCollectionId = async (itemId: string): Promise<string> => {
     const cached = itemCache.get(itemId);
@@ -41,6 +56,7 @@ const groupFilesByItem = async (
     const itemMetadata = await getEntityMetadata(itemId, accessToken);
     const collectionId = itemMetadata.memberOf?.id || 'unknown-collection';
     itemCache.set(itemId, collectionId);
+    updateJobGroupProgress(jobId, itemCache.size, totalItems);
 
     return collectionId;
   };
@@ -79,7 +95,7 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
   // Group files by collection/item hierarchy
   console.log('Grouping files by collection and item...');
   updateJobPhase(jobId, 'grouping');
-  const { filesByItem, totalSize } = await groupFilesByItem(items, files, accessToken);
+  const { filesByItem, totalSize } = await groupFilesByItem(jobId, items, files, accessToken);
   updateJobTotalSize(jobId, totalSize);
 
   // Streaming phase: fetch → zip → S3 in one pipeline

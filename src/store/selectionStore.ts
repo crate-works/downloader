@@ -253,6 +253,21 @@ const toggleFileSelectionAtom = atom(null, (get, set, fileId: string) => {
   set(selectedFilesAtom, newSet);
 });
 
+const setFilesSelectedAtom = atom(null, (get, set, { fileIds, selected }: { fileIds: string[]; selected: boolean }) => {
+  const selectedFiles = get(selectedFilesAtom);
+  const newSet = new Set(selectedFiles);
+
+  for (const fileId of fileIds) {
+    if (selected) {
+      newSet.add(fileId);
+    } else {
+      newSet.delete(fileId);
+    }
+  }
+
+  set(selectedFilesAtom, newSet);
+});
+
 const registerItemsForCollectionAtom = atom(null, (get, set, { collectionId, items }: { collectionId: string; items: Entity[] }) => {
   const collectionItems = get(collectionItemsAtom);
   const selectedCollections = get(selectedCollectionsAtom);
@@ -479,6 +494,7 @@ export const useSelectionStore = () => {
   const selectItem = useSetAtom(selectItemAtom);
   const deselectItem = useSetAtom(deselectItemAtom);
   const toggleFileSelection = useSetAtom(toggleFileSelectionAtom);
+  const setFilesSelected = useSetAtom(setFilesSelectedAtom);
   const registerItemsForCollection = useSetAtom(registerItemsForCollectionAtom);
   const registerFilesForItem = useSetAtom(registerFilesForItemAtom);
   const toggleCollectionExpand = useSetAtom(toggleCollectionExpandAtom);
@@ -510,6 +526,7 @@ export const useSelectionStore = () => {
     selectItem,
     deselectItem,
     toggleFileSelection,
+    setFilesSelected: useCallback((fileIds: string[], selected: boolean) => setFilesSelected({ fileIds, selected }), [setFilesSelected]),
     registerItemsForCollection: useCallback(
       (collectionId: string, items: Entity[]) => registerItemsForCollection({ collectionId, items }),
       [registerItemsForCollection],
@@ -525,7 +542,7 @@ export const useSelectionStore = () => {
     getSelectedFiles: () => selectedFilesList,
     getSelectedFileIds: () => selectedFileIds,
     getTotalSelectedSize: () => totalSelectedSize,
-    isFileIncluded: (file: RoCrateFile) => isFileIncluded(file),
+    isFileIncluded,
     getCollectionSelectionState: (collectionId: string) =>
       getCollectionSelectionState(
         collectionId,

@@ -9,6 +9,8 @@ export type JobPhase = 'grouping' | 'downloading' | 'emailing' | 'complete' | 'f
 export type JobStatus = {
   jobId: string;
   phase: JobPhase;
+  totalItems: number;
+  groupedItems: number;
   totalFiles: number;
   downloadedFiles: number;
   failedFiles: Array<{ filename: string; error: string }>;

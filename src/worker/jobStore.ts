@@ -3,6 +3,8 @@ import type { JobPhase, JobStatus } from '#/shared/types/index.ts';
 type MutableJobState = {
   jobId: string;
   phase: JobPhase;
+  totalItems: number;
+  groupedItems: number;
   totalFiles: number;
   downloadedFiles: number;
   failedFiles: Array<{ filename: string; error: string }>;
@@ -43,6 +45,8 @@ export const initJob = (jobId: string, totalFiles: number, totalSize: number): v
   getStore().set(jobId, {
     jobId,
     phase: 'grouping',
+    totalItems: 0,
+    groupedItems: 0,
     totalFiles,
     downloadedFiles: 0,
     failedFiles: [],
@@ -56,6 +60,14 @@ export const updateJobPhase = (jobId: string, phase: JobPhase): void => {
   const job = getStore().get(jobId);
   if (job) {
     job.phase = phase;
+  }
+};
+
+export const updateJobGroupProgress = (jobId: string, groupedItems: number, totalItems: number): void => {
+  const job = getStore().get(jobId);
+  if (job) {
+    job.groupedItems = groupedItems;
+    job.totalItems = totalItems;
   }
 };
 
@@ -109,6 +121,8 @@ export const getJobStatus = (jobId: string): JobStatus | null => {
   const result: JobStatus = {
     jobId: job.jobId,
     phase: job.phase,
+    totalItems: job.totalItems,
+    groupedItems: job.groupedItems,
     totalFiles: job.totalFiles,
     downloadedFiles: job.downloadedFiles,
     failedFiles: job.failedFiles,

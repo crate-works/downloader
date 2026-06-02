@@ -1,15 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { getItemsInCollection } from '#/server/functions/collections.ts';
 import { useSelectionStore } from '#/store/selectionStore.ts';
+import { itemsQueryOptions } from './queries.ts';
 
 export const useItems = (collectionId: string, enabled = true) => {
   const { registerItemsForCollection } = useSelectionStore();
 
   const query = useQuery({
-    queryKey: ['items', collectionId],
-    queryFn: () => getItemsInCollection({ data: { collectionId } }),
-    staleTime: 5 * 60 * 1000,
+    ...itemsQueryOptions(collectionId),
     enabled: enabled && !!collectionId,
   });
 

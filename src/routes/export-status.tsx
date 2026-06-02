@@ -222,6 +222,10 @@ function ExportStatusPage() {
             ))}
           </div>
 
+          {status.phase === 'grouping' && (
+            <ProgressBar loaded={status.groupedItems} total={status.totalItems} label={`${status.groupedItems} / ${status.totalItems} items`} />
+          )}
+
           {status.phase === 'downloading' && (
             <div className="space-y-3">
               <ProgressBar loaded={status.downloadedFiles} total={status.totalFiles} label={`${status.downloadedFiles} / ${status.totalFiles} files`} />

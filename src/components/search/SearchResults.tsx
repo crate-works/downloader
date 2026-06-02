@@ -1,9 +1,11 @@
 import { CollectionItem } from '#/components/browser/CollectionItem.tsx';
 import { ItemRow } from '#/components/browser/ItemRow.tsx';
+import { MimeTypeFilterBar } from '#/components/browser/MimeTypeFilterBar.tsx';
 import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
 import { ActiveFilterBadges } from '#/components/search/ActiveFilterBadges.tsx';
 import { FacetPanel } from '#/components/search/FacetPanel.tsx';
 import { Pagination } from '#/components/ui/pagination.tsx';
+import { usePagePrefetch } from '#/hooks/usePagePrefetch.ts';
 import { useSearch } from '#/hooks/useSearch.ts';
 import type { Entity } from '#/shared/types/entity.ts';
 import type { FacetFilters } from '#/shared/types/search.ts';
@@ -30,6 +32,8 @@ export const SearchResults = ({ query, page, filters, onPageChange, onFiltersCha
 
   const activeFilters = filters ?? {};
 
+  const prefetch = usePagePrefetch(data?.entities);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -55,6 +59,8 @@ export const SearchResults = ({ query, page, filters, onPageChange, onFiltersCha
 
       <div className="min-w-0 flex-1 space-y-4">
         <ActiveFilterBadges filters={activeFilters} onFiltersChange={onFiltersChange} />
+
+        {data && data.entities.length > 0 && <MimeTypeFilterBar prefetch={prefetch} />}
 
         {!data || data.entities.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground">
