@@ -158,6 +158,11 @@ jobs:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
+          # Images are pushed by digest here and only tagged later in the
+          # docker-merge job, so the org-level artifact-metadata storage record
+          # has no tagged package to attach to ("no artifacts found"). Disabling
+          # it silences that warning without affecting the provenance attestation.
+          create-storage-record: false
 
       - name: Export digest
         env:
