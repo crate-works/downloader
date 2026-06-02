@@ -1,3 +1,9 @@
+## [1.10.0](https://github.com/crate-works/downloader/compare/v1.9.0...v1.10.0) (2026-06-02)
+
+### Features
+
+* **browser:** add file-type filter bar with page prefetch ([78222de](https://github.com/crate-works/downloader/commit/78222de543675cd6b638b1457b3bc40ca16b2166))
+
 ## [1.9.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.8.2...v1.9.0) (2026-04-17)
 
 ### Features
