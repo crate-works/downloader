@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { getCookie } from '#/server/services/cookies.ts';
 import type { ExportJobMessage, JobStatus } from '#/shared/types/index.ts';
-import { failJob, getJobStatus as getJobStatusFromStore, initJob } from '#/worker/jobStore.ts';
+import { cancelJob, failJob, getJobStatus as getJobStatusFromStore, initJob } from '#/worker/jobStore.ts';
 import { processJob } from '#/worker/processor.ts';
 
 const exportFileSchema = z.object({
@@ -80,4 +80,12 @@ export const getJobStatus = createServerFn({ method: 'GET' })
   .inputValidator((data: unknown) => z.object({ jobId: z.string().uuid() }).parse(data))
   .handler(async ({ data }): Promise<JobStatus | null> => {
     return getJobStatusFromStore(data.jobId);
+  });
+
+// Cooperatively cancel a running export. Authorised by knowledge of the job UUID
+// alone (consistent with getJobStatus), but note this is a destructive capability.
+export const cancelExport = createServerFn({ method: 'POST' })
+  .inputValidator((data: unknown) => z.object({ jobId: z.string().uuid() }).parse(data))
+  .handler(async ({ data }): Promise<{ success: boolean }> => {
+    return { success: cancelJob(data.jobId) };
   });

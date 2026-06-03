@@ -4,7 +4,11 @@ export type ExportFileInfo = Pick<RoCrateFile, 'id' | 'filename' | 'size' | 'mem
 
 export type ExportItemInfo = { id: string };
 
-export type JobPhase = 'grouping' | 'downloading' | 'emailing' | 'complete' | 'failed';
+export type JobPhase = 'grouping' | 'downloading' | 'emailing' | 'complete' | 'failed' | 'cancelled';
+
+// Phases a job can no longer leave. A terminal phase is never overwritten, and the
+// UI stops polling once a job reaches one.
+export const TERMINAL_PHASES: ReadonlySet<JobPhase> = new Set<JobPhase>(['complete', 'failed', 'cancelled']);
 
 export type JobStatus = {
   jobId: string;

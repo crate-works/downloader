@@ -1,11 +1,22 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { AlertTriangle, CheckCircle, Download, Info, Loader2, MemoryStick, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Download, Info, Loader2, MemoryStick, Octagon, XCircle } from 'lucide-react';
 import { z } from 'zod';
-import { buttonVariants } from '#/components/ui/button.tsx';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '#/components/ui/alert-dialog.tsx';
+import { Button, buttonVariants } from '#/components/ui/button.tsx';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card.tsx';
-import { getJobStatus } from '#/server/functions/export.ts';
+import { cancelExport, getJobStatus } from '#/server/functions/export.ts';
 import { formatFileSize } from '#/shared/formatters.ts';
+import { TERMINAL_PHASES } from '#/shared/types/export.ts';
 import type { JobPhase, JobStatus } from '#/shared/types/index.ts';
 
 const searchSchema = z.object({
@@ -23,6 +34,7 @@ const PHASE_LABELS: Record<JobPhase, string> = {
   emailing: 'Sending email',
   complete: 'Complete',
   failed: 'Failed',
+  cancelled: 'Cancelled',
 };
 
 const PHASE_ORDER: JobPhase[] = ['grouping', 'downloading', 'emailing', 'complete'];
@@ -112,6 +124,40 @@ const ResourceStats = ({ status }: { status: JobStatus }) => (
   </div>
 );
 
+const StopExportButton = ({ jobId }: { jobId: string }) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => cancelExport({ data: { jobId } }),
+    // Polling has its own cadence; force an immediate refetch so the UI flips to
+    // the 'cancelled' state right away (and before polling stops on that phase).
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['jobStatus', jobId] }),
+  });
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger
+        render={
+          <Button variant="destructive" size="lg" className="w-full" disabled={isPending}>
+            <Octagon className="mr-2 h-4 w-4" />
+            Stop Export
+          </Button>
+        }
+      />
+      <AlertDialogContent>
+        <AlertDialogTitle>Stop this export?</AlertDialogTitle>
+        <AlertDialogDescription>
+          The export will be cancelled and all progress so far discarded. This cannot be undone — you'll need to start again.
+        </AlertDialogDescription>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep going</AlertDialogCancel>
+          <AlertDialogAction onClick={() => mutate()}>Yes, stop</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
+
 function ExportStatusPage() {
   const { jobId } = Route.useSearch();
 
@@ -120,7 +166,7 @@ function ExportStatusPage() {
     queryFn: () => getJobStatus({ data: { jobId } }),
     refetchInterval: (query) => {
       const phase = query.state.data?.phase;
-      if (phase === 'complete' || phase === 'failed') return false;
+      if (phase && TERMINAL_PHASES.has(phase)) return false;
 
       return 2000;
     },
@@ -203,7 +249,28 @@ function ExportStatusPage() {
     );
   }
 
+  if (status.phase === 'cancelled') {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <Octagon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <CardTitle>Export Stopped</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-muted-foreground">You stopped this export. No download file was created. You can start a new export at any time.</p>
+            <Link to="/browser" className={buttonVariants()}>
+              Back to Browser
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // In-progress states
+  const canStop = status.phase === 'grouping' || status.phase === 'downloading';
+
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <Card className="max-w-lg w-full">
@@ -236,6 +303,8 @@ function ExportStatusPage() {
           <FailedFilesList files={status.failedFiles} />
 
           <ResourceStats status={status} />
+
+          {canStop && <StopExportButton jobId={jobId} />}
         </CardContent>
       </Card>
     </div>

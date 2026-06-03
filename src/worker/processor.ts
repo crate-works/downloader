@@ -3,6 +3,7 @@ import type { ExportFileInfo, ExportItemInfo, ExportJobMessage } from '#/shared/
 import {
   completeJob,
   failJob,
+  registerJobAbort,
   updateJobDownloadProgress,
   updateJobGroupProgress,
   updateJobPhase,
@@ -11,7 +12,7 @@ import {
 } from './jobStore.ts';
 import { sendDownloadEmail } from './services/email.ts';
 import { fetchFileStream, fetchRoCrateMetadata, getEntityMetadata } from './services/rocrate.ts';
-import { generatePresignedUrl, uploadStreamToS3 } from './services/s3.ts';
+import { deleteFromS3, generatePresignedUrl, uploadStreamToS3 } from './services/s3.ts';
 import { createStreamingZip } from './services/zipper.ts';
 
 type FilesByItem = Map<string, { itemId: string; collectionId: string; files: ExportFileInfo[] }>;
@@ -37,6 +38,7 @@ const groupFilesByItem = async (
   items: ExportItemInfo[],
   files: ExportFileInfo[],
   accessToken?: string,
+  signal?: AbortSignal,
 ): Promise<{ filesByItem: FilesByItem; totalSize: number }> => {
   const filesByItem: FilesByItem = new Map();
   const itemCache = new Map<string, string>(); // itemId -> collectionId
@@ -53,7 +55,7 @@ const groupFilesByItem = async (
     if (cached) return cached;
 
     console.log(`Fetching metadata for item: ${itemId}`);
-    const itemMetadata = await getEntityMetadata(itemId, accessToken);
+    const itemMetadata = await getEntityMetadata(itemId, accessToken, signal);
     const collectionId = itemMetadata.memberOf?.id || 'unknown-collection';
     itemCache.set(itemId, collectionId);
     updateJobGroupProgress(jobId, itemCache.size, totalItems);
@@ -92,83 +94,112 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
 
   console.log(`Processing job ${jobId}: ${files.length} files, ${items.length} items for ${email}`);
 
+  // Cooperative cancellation: cancelJob() aborts this controller, which tears
+  // down the in-flight S3 upload and RO-Crate fetches.
+  const controller = new AbortController();
+  const { signal } = controller;
+  registerJobAbort(jobId, controller);
+
+  const s3Key = `exports/${jobId}.zip`;
+
   // Group files by collection/item hierarchy
   console.log('Grouping files by collection and item...');
   updateJobPhase(jobId, 'grouping');
-  const { filesByItem, totalSize } = await groupFilesByItem(jobId, items, files, accessToken);
+  const { filesByItem, totalSize } = await groupFilesByItem(jobId, items, files, accessToken, signal);
   updateJobTotalSize(jobId, totalSize);
 
   // Streaming phase: fetch → zip → S3 in one pipeline
   updateJobPhase(jobId, 'downloading');
   const zip = createStreamingZip();
 
-  const s3Key = `exports/${jobId}.zip`;
-  const uploadPromise = uploadStreamToS3(zip.outputStream, s3Key);
+  const uploadPromise = uploadStreamToS3(zip.outputStream, s3Key, signal);
 
   // Prevent unhandled errors on yazl's outputStream (the error also propagates via uploadPromise)
   zip.outputStream.on('error', (error) => {
     console.error('Zip output stream error:', error);
   });
 
-  // Add RO-Crate metadata for each collection
-  const collectionIds = new Set([...filesByItem.values()].map(({ collectionId }) => collectionId).filter((id) => id !== 'unknown-collection'));
+  try {
+    // Add RO-Crate metadata for each collection
+    const collectionIds = new Set([...filesByItem.values()].map(({ collectionId }) => collectionId).filter((id) => id !== 'unknown-collection'));
 
-  for (const collectionId of collectionIds) {
-    const collectionPath = extractPathFromId(collectionId);
-    console.log(`Adding RO-Crate metadata for collection: ${collectionId}`);
-    const metadataBuffer = await fetchRoCrateMetadata(collectionId, accessToken);
-    zip.addBuffer(metadataBuffer, `${collectionPath}/ro-crate-metadata.json`);
-  }
+    for (const collectionId of collectionIds) {
+      const collectionPath = extractPathFromId(collectionId);
+      console.log(`Adding RO-Crate metadata for collection: ${collectionId}`);
+      const metadataBuffer = await fetchRoCrateMetadata(collectionId, accessToken, signal);
+      zip.addBuffer(metadataBuffer, `${collectionPath}/ro-crate-metadata.json`);
+    }
 
-  // Register each file lazily — the fetch only happens when yazl is ready to read,
-  // preventing idle connections from being closed by the upstream server.
-  let downloadedCount = 0;
-  let streamedBytes = 0;
+    // Register each file lazily — the fetch only happens when yazl is ready to read,
+    // preventing idle connections from being closed by the upstream server.
+    let downloadedCount = 0;
+    let streamedBytes = 0;
 
-  for (const [, { itemId, files: itemFiles }] of filesByItem) {
-    const itemPath = extractPathFromId(itemId);
+    for (const [, { itemId, files: itemFiles }] of filesByItem) {
+      const itemPath = extractPathFromId(itemId);
 
-    // Add RO-Crate metadata for the item
-    console.log(`Adding RO-Crate metadata for item: ${itemId}`);
-    const itemMetadataBuffer = await fetchRoCrateMetadata(itemId, accessToken);
-    zip.addBuffer(itemMetadataBuffer, `${itemPath}/ro-crate-metadata.json`);
+      // Add RO-Crate metadata for the item
+      console.log(`Adding RO-Crate metadata for item: ${itemId}`);
+      const itemMetadataBuffer = await fetchRoCrateMetadata(itemId, accessToken, signal);
+      zip.addBuffer(itemMetadataBuffer, `${itemPath}/ro-crate-metadata.json`);
 
-    for (const file of itemFiles) {
-      const fileIndex = ++downloadedCount;
+      for (const file of itemFiles) {
+        const fileIndex = ++downloadedCount;
 
-      zip.addStreamLazy(
-        async () => {
-          console.log(`Streaming file ${fileIndex}/${files.length}: ${file.filename}`);
-          updateJobDownloadProgress(jobId, fileIndex);
+        zip.addStreamLazy(
+          async () => {
+            console.log(`Streaming file ${fileIndex}/${files.length}: ${file.filename}`);
+            updateJobDownloadProgress(jobId, fileIndex);
 
-          const fileStream = await fetchFileStream(file.id, accessToken);
-          fileStream.on('end', () => {
-            streamedBytes += file.size;
-            updateJobStreamedBytes(jobId, streamedBytes);
-          });
+            const fileStream = await fetchFileStream(file.id, accessToken, signal);
+            fileStream.on('end', () => {
+              streamedBytes += file.size;
+              updateJobStreamedBytes(jobId, streamedBytes);
+            });
 
-          return fileStream;
-        },
-        `${itemPath}/${file.filename}`,
-        file.size,
-      );
+            return fileStream;
+          },
+          `${itemPath}/${file.filename}`,
+          file.size,
+        );
+      }
+    }
+
+    // Finalize zip and wait for S3 upload to complete.
+    // Any error (failed fetch, mid-stream socket close, upload failure) rejects uploadPromise.
+    // The whole phase is wrapped so a cancellation that surfaces from a metadata fetch
+    // (not just from uploadPromise) still hits the cleanup below, and uploadPromise is
+    // always awaited rather than left to reject unhandled when abort() tears it down.
+    zip.finalize();
+    await uploadPromise;
+  } catch (error) {
+    // A genuine failure (failed fetch, mid-stream socket close, upload error) — but
+    // NOT a cancellation, which also rejects here and is handled by the shared
+    // cleanup below. cancelJob already set the phase to 'cancelled'.
+    if (!signal.aborted) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`Export pipeline failed: ${message}`, error);
+      failJob(jobId, `Export failed: ${message}`);
+      await sendDownloadEmail({
+        to: email,
+        fileCount: files.length,
+        totalSize: formatFileSize(totalSize),
+      });
+
+      return;
     }
   }
 
-  // Finalize zip and wait for S3 upload to complete.
-  // Any error (failed fetch, mid-stream socket close, upload failure) rejects uploadPromise.
-  zip.finalize();
-
-  try {
-    await uploadPromise;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(`Export pipeline failed: ${message}`, error);
-    failJob(jobId, `Export failed: ${message}`);
-    await sendDownloadEmail({
-      to: email,
-      fileCount: files.length,
-      totalSize: formatFileSize(totalSize),
+  // Cancellation cleanup, reached whether the abort surfaced as a rejection above or
+  // as a resolved upload (a small zip can land in a single PUT before abort() does).
+  // Wait for the upload to settle (swallowing its abort rejection) before deleting,
+  // so the delete never races a late PUT and the upload never rejects unhandled.
+  // Deleting a missing key is a harmless no-op.
+  if (signal.aborted) {
+    console.log(`Export job ${jobId} cancelled; removing upload`);
+    await uploadPromise.catch(() => {});
+    await deleteFromS3(s3Key).catch((deleteError) => {
+      console.error(`Failed to delete cancelled upload ${s3Key}:`, deleteError);
     });
 
     return;

@@ -1,3 +1,4 @@
+import { TERMINAL_PHASES } from '#/shared/types/export.ts';
 import type { JobPhase, JobStatus } from '#/shared/types/index.ts';
 
 type MutableJobState = {
@@ -28,6 +29,17 @@ const getStore = (): Map<string, MutableJobState> => {
   }
 
   return g.__jobStore;
+};
+
+// AbortControllers are live objects, so they live in a parallel registry rather
+// than on the serialisable MutableJobState data record.
+const getAbortRegistry = (): Map<string, AbortController> => {
+  const g = globalThis as unknown as { __jobAbortRegistry?: Map<string, AbortController> };
+  if (!g.__jobAbortRegistry) {
+    g.__jobAbortRegistry = new Map();
+  }
+
+  return g.__jobAbortRegistry;
 };
 
 const startCleanup = (store: Map<string, MutableJobState>): void => {
@@ -92,22 +104,45 @@ export const updateJobStreamedBytes = (jobId: string, streamedBytes: number): vo
   }
 };
 
-export const completeJob = (jobId: string, downloadUrl: string): void => {
+// Register the AbortController for a running job so cancelJob can tear it down.
+export const registerJobAbort = (jobId: string, controller: AbortController): void => {
+  getAbortRegistry().set(jobId, controller);
+};
+
+// Latch a job into a terminal phase. A terminal phase is never overwritten — this
+// is what stops a late upload from resurrecting a cancelled job, or an AbortError
+// from turning a deliberate 'cancelled' into a 'failed'. The abort registry is torn
+// down regardless, since the job is finished either way. Returns whether it transitioned.
+const reachTerminal = (jobId: string, phase: JobPhase, patch?: Partial<MutableJobState>): boolean => {
   const job = getStore().get(jobId);
-  if (job) {
-    job.phase = 'complete';
-    job.downloadUrl = downloadUrl;
-    job.completedAt = new Date().toISOString();
+  getAbortRegistry().delete(jobId);
+  if (!job || TERMINAL_PHASES.has(job.phase)) {
+    return false;
   }
+
+  Object.assign(job, patch, { phase, completedAt: new Date().toISOString() });
+
+  return true;
+};
+
+export const completeJob = (jobId: string, downloadUrl: string): void => {
+  reachTerminal(jobId, 'complete', { downloadUrl });
 };
 
 export const failJob = (jobId: string, errorMessage: string): void => {
-  const job = getStore().get(jobId);
-  if (job) {
-    job.phase = 'failed';
-    job.errorMessage = errorMessage;
-    job.completedAt = new Date().toISOString();
+  reachTerminal(jobId, 'failed', { errorMessage });
+};
+
+// Cooperatively cancel a running job: flag it cancelled and abort its pipeline.
+// No-op if the job is unknown or already in a terminal state.
+export const cancelJob = (jobId: string): boolean => {
+  const controller = getAbortRegistry().get(jobId);
+  const cancelled = reachTerminal(jobId, 'cancelled');
+  if (cancelled) {
+    controller?.abort();
   }
+
+  return cancelled;
 };
 
 export const getJobStatus = (jobId: string): JobStatus | null => {

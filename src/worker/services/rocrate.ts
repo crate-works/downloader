@@ -22,11 +22,12 @@ const buildHeaders = (token?: string, accept = 'application/json'): Record<strin
   return headers;
 };
 
-export const fetchFileStream = async (fileId: string, token?: string): Promise<Readable> => {
+export const fetchFileStream = async (fileId: string, token?: string, signal?: AbortSignal): Promise<Readable> => {
   const url = buildUrl(`/file/${encodeURIComponent(fileId)}`);
 
   const response = await fetch(url.toString(), {
     headers: buildHeaders(token, '*/*'),
+    signal: signal ?? null,
   });
 
   if (!response.ok) {
@@ -41,11 +42,12 @@ export const fetchFileStream = async (fileId: string, token?: string): Promise<R
   return Readable.fromWeb(response.body);
 };
 
-export const getEntityMetadata = async (entityId: string, token?: string): Promise<Entity> => {
+export const getEntityMetadata = async (entityId: string, token?: string, signal?: AbortSignal): Promise<Entity> => {
   const url = buildUrl(`/entity/${encodeURIComponent(entityId)}`);
 
   const response = await fetch(url.toString(), {
     headers: buildHeaders(token, 'application/json'),
+    signal: signal ?? null,
   });
 
   if (!response.ok) {
@@ -55,11 +57,12 @@ export const getEntityMetadata = async (entityId: string, token?: string): Promi
   return response.json() as Promise<Entity>;
 };
 
-const getEntityRoCrate = async (entityId: string, token?: string): Promise<unknown> => {
+const getEntityRoCrate = async (entityId: string, token?: string, signal?: AbortSignal): Promise<unknown> => {
   const url = buildUrl(`/entity/${encodeURIComponent(entityId)}/rocrate`);
 
   const response = await fetch(url.toString(), {
     headers: buildHeaders(token, 'application/ld+json'),
+    signal: signal ?? null,
   });
 
   if (!response.ok) {
@@ -69,8 +72,8 @@ const getEntityRoCrate = async (entityId: string, token?: string): Promise<unkno
   return response.json();
 };
 
-export const fetchRoCrateMetadata = async (entityId: string, token?: string): Promise<Buffer> => {
-  const rocrate = await getEntityRoCrate(entityId, token);
+export const fetchRoCrateMetadata = async (entityId: string, token?: string, signal?: AbortSignal): Promise<Buffer> => {
+  const rocrate = await getEntityRoCrate(entityId, token, signal);
 
   return Buffer.from(JSON.stringify(rocrate, null, 2));
 };
