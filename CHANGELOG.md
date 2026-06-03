@@ -1,3 +1,9 @@
+## [1.11.0](https://github.com/crate-works/downloader/compare/v1.10.0...v1.11.0) (2026-06-03)
+
+### Features
+
+* **browser:** add results-per-page picker ([8ed2fc9](https://github.com/crate-works/downloader/commit/8ed2fc9d3ef33e7fafca317420079e45b8f66ce6))
+
 ## [1.10.0](https://github.com/crate-works/downloader/compare/v1.9.0...v1.10.0) (2026-06-02)
 
 ### Features
