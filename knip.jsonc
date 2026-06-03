@@ -3,7 +3,9 @@
   "entry": ["src/router.tsx"],
   "ignore": [
     // shadcn/ui component library
-    "src/components/ui/**"
+    "src/components/ui/**",
+    // Marketing/docs site — its own isolated pnpm project, checked separately
+    "website/**"
   ],
   "ignoreDependencies": [
     // Used by semantic-release as preset

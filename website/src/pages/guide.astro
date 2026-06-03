@@ -1,0 +1,97 @@
+---
+import Screenshot from '../components/Screenshot.astro';
+import Step from '../components/Step.astro';
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="User guide" description="How to search, filter by quality tier, select files, and receive your download link by email.">
+  <header class="border-b border-slate-200 bg-gradient-to-b from-brand-50 to-white">
+    <div class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <p class="text-sm font-semibold tracking-wide text-brand-600 uppercase">User guide</p>
+      <h1 class="mt-3 text-4xl font-bold tracking-tight text-slate-900">Finding and downloading files</h1>
+      <p class="mt-4 text-lg text-slate-600">
+        A walk through the app from signing in to receiving your zip. Your archive's deployment may look slightly different, but the flow is the same.
+      </p>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+    <ol class="relative">
+      <Step n={1} title="Sign in">
+        <p>
+          Open your archive's downloader and sign in. Access uses your institution's single sign-on (OIDC), so you log in with the account you already have — no
+          separate password to manage.
+        </p>
+      </Step>
+
+      <Step n={2} title="Search and narrow with facets">
+        <p>
+          Use the search bar to find material, then refine with the facets in the sidebar — by collection, language, country, collector, identifier or entity
+          type. Results update as you go.
+        </p>
+        <Screenshot
+          src="/screenshots/facets.png"
+          alt="The filter facets sidebar"
+          caption="Narrow results by collection, language, country, collector and more."
+        />
+      </Step>
+
+      <Step n={3} title="Choose your quality tier">
+        <p>
+          Many items exist in more than one format. Pick the
+          <strong class="font-semibold text-slate-700">archival</strong>
+          tier for preservation masters (WAV, MKV, MXF, TIFF), or the
+          <strong class="font-semibold text-slate-700">compressed</strong>
+          tier for smaller everyday copies (MP3). The filter applies as you browse, so you only ever select the versions you want.
+        </p>
+        <Screenshot src="/screenshots/quality-tier.png" alt="The quality tier filter bar" caption="Switch between archival and compressed formats." />
+      </Step>
+
+      <Step n={4} title="Select files and watch the totals">
+        <p>
+          Expand a collection into its items and files, and tick the ones you want. Running totals show the size of your selection at every level — file, item
+          and collection — so there are no surprises before you export.
+        </p>
+        <Screenshot src="/screenshots/selection.png" alt="File selection with running size totals" caption="Sizes add up live as you build a selection." />
+      </Step>
+
+      <Step n={5} title="Request your export">
+        <p>
+          When you are happy with the selection, request the export. The app queues a background job that downloads your files, zips them, and uploads the
+          archive — you do not need to keep the page open.
+        </p>
+      </Step>
+
+      <Step n={6} title="Track progress">
+        <p>
+          The export status page shows the job moving through its phases — archiving the files, then uploading the zip. Large selections simply take a little
+          longer.
+        </p>
+        <Screenshot
+          src="/screenshots/export-status.png"
+          alt="The export status page showing archiving and upload progress"
+          caption="Live progress while your zip is built and uploaded."
+        />
+      </Step>
+
+      <Step n={7} title="Download your zip">
+        <p>
+          When the job finishes you can download the zip straight away, and a secure, time-limited link is also emailed to you in case you have closed the page.
+        </p>
+        <Screenshot
+          src="/screenshots/email.png"
+          alt="The export-complete screen with a download button"
+          caption="Download your zip — a copy of the link is also sent to your email."
+        />
+      </Step>
+    </ol>
+
+    <div class="mt-8 rounded-2xl border border-brand-100 bg-brand-50 p-6">
+      <h2 class="font-semibold text-slate-900">Running your own instance?</h2>
+      <p class="mt-2 text-slate-600">
+        See the <a href="/self-hosting/" class="font-medium text-brand-600 hover:underline">self-hosting guide</a>
+        for how to deploy the downloader with Docker and connect it to your RO-Crate API, identity provider and AWS account.
+      </p>
+    </div>
+  </div>
+</Base>

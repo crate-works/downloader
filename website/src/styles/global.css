@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+/*
+ * Marketing palette. Anchored on the app's primary blue
+ * (oklch(0.61 0.11 222) -> --color-brand-500) with a warm amber accent for a
+ * distinct "brochure" feel that the product UI itself does not use.
+ */
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-brand-50: oklch(0.97 0.02 222);
+  --color-brand-100: oklch(0.93 0.04 222);
+  --color-brand-200: oklch(0.87 0.07 222);
+  --color-brand-300: oklch(0.79 0.1 222);
+  --color-brand-400: oklch(0.7 0.12 222);
+  --color-brand-500: oklch(0.61 0.11 222);
+  --color-brand-600: oklch(0.52 0.1 223);
+  --color-brand-700: oklch(0.44 0.09 224);
+  --color-brand-800: oklch(0.36 0.07 225);
+  --color-brand-900: oklch(0.28 0.05 226);
+  --color-brand-950: oklch(0.2 0.04 227);
+
+  --color-accent-300: oklch(0.88 0.1 78);
+  --color-accent-400: oklch(0.83 0.14 75);
+  --color-accent-500: oklch(0.78 0.16 70);
+  --color-accent-600: oklch(0.7 0.16 60);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizelegibility;
+}
+
+/* Anchored sections clear the sticky header when jumped to. */
+:target {
+  scroll-margin-top: 6rem;
+}

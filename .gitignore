@@ -5,6 +5,9 @@ node_modules/
 dist/
 .output/
 
+# Astro generated types (website/)
+.astro/
+
 # Environment files
 .env
 .env.local

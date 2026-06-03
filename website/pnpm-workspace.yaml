@@ -1,0 +1,7 @@
+# Re-roots this folder as its own pnpm project so installs do NOT anchor to the
+# parent app's workspace/lockfile. Keeps the app's Docker build hermetic.
+# Mirrors the supply-chain hardening from the root pnpm-workspace.yaml.
+allowBuilds:
+  esbuild: true
+
+minimumReleaseAge: 4320 # 3 days

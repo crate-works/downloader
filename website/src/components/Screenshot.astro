@@ -1,0 +1,81 @@
+---
+import { closeSync, existsSync, openSync, readSync } from 'node:fs';
+import { join } from 'node:path';
+
+interface Props {
+  /** Path under /public once a real screenshot is supplied, e.g. "/screenshots/search.png". */
+  src?: string;
+  /** Alt text / description of the shot. Also used as the placeholder label. */
+  alt: string;
+  /** Optional caption shown beneath the image. */
+  caption?: string;
+}
+
+const { src, alt, caption } = Astro.props;
+
+// Read intrinsic PNG dimensions so the <img> can reserve space (no layout
+// shift), auto-adapting if the image is swapped. Returns null for non-PNGs.
+function pngSize(path: string): { width: number; height: number } | null {
+  try {
+    const fd = openSync(path, 'r');
+    const head = Buffer.alloc(24);
+    readSync(fd, head, 0, 24, 0);
+    closeSync(fd);
+    // PNG signature, then IHDR width/height as big-endian uint32 at bytes 16/20.
+    if (head.readUInt32BE(0) !== 0x89504e47) return null;
+    return { width: head.readUInt32BE(16), height: head.readUInt32BE(20) };
+  } catch {
+    return null;
+  }
+}
+
+// Render the real image only once it actually exists in /public; otherwise show
+// a labelled placeholder. This lets all slots ship now and light up
+// automatically when screenshots are dropped in — no broken images in between.
+// process.cwd() is the Astro project root (website/) during dev and build.
+const file = src ? join(process.cwd(), 'public', src) : null;
+const hasImage = !!file && existsSync(file);
+const size = hasImage && file ? pngSize(file) : null;
+---
+
+<figure class="my-2">
+  {hasImage ? (
+      <img
+        src={src}
+        alt={alt}
+        width={size?.width}
+        height={size?.height}
+        loading="lazy"
+        decoding="async"
+        class="h-auto w-full rounded-xl border border-slate-200 shadow-sm"
+      />
+    ) : (
+      <div
+        class="flex aspect-[16/10] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center"
+        role="img"
+        aria-label={`Screenshot placeholder: ${alt}`}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="28"
+          height="28"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          class="text-slate-400"
+          aria-hidden="true"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <path d="m21 15-5-5L5 21" />
+        </svg>
+        <span class="text-sm font-medium text-slate-500">Screenshot: {alt}</span>
+        <span class="text-xs text-slate-400">Placeholder — real image to be added</span>
+      </div>
+    )}
+  {caption && (
+      <figcaption class="mt-2 text-center text-sm text-slate-500">
+        {caption}
+      </figcaption>
+    )}
+</figure>

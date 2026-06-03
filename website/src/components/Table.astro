@@ -1,0 +1,33 @@
+---
+interface Column {
+  header: string;
+  /** Tailwind classes applied to every cell in this column. */
+  class?: string;
+}
+
+interface Props {
+  columns: Column[];
+  rows: string[][];
+}
+
+const { columns, rows } = Astro.props;
+---
+
+<div class="mt-6 overflow-x-auto rounded-2xl border border-slate-200">
+  <table class="w-full border-collapse text-left text-sm">
+    <thead class="bg-slate-50 text-slate-500">
+      <tr>
+        {columns.map((col) => <th class="px-4 py-3 font-semibold">{col.header}</th>)}
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      {rows.map((row) => (
+          <tr>
+            {row.map((cell, i) => (
+              <td class:list={['px-4 py-3', columns[i]?.class]}>{cell}</td>
+            ))}
+          </tr>
+        ))}
+    </tbody>
+  </table>
+</div>

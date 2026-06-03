@@ -58,6 +58,10 @@
     }
   },
   "html": {
+    // Full parsing/formatting/linting of HTML-ish files (incl. Astro in
+    // website/). With this on, Biome understands .astro templates, so unused
+    // imports/vars used only in markup are detected correctly.
+    "experimentalFullSupportEnabled": true,
     "formatter": {
       "enabled": true
     }
@@ -66,5 +70,20 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+  "overrides": [
+    {
+      // Astro templates (website/) are not React: list rendering with .map()
+      // needs no `key` prop, so the React-domain rule misfires here. Unused
+      // import/variable detection still works thanks to full HTML support above.
+      "includes": ["**/*.astro"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useJsxKeyInIterable": "off"
+          }
+        }
+      }
+    }
+  ]
 }

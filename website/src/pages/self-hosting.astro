@@ -1,0 +1,167 @@
+---
+import CodeBlock from '../components/CodeBlock.astro';
+import InlineCode from '../components/InlineCode.astro';
+import Table from '../components/Table.astro';
+import { DOCKER_IMAGE, GITHUB_URL, ROCRATE_API_URL } from '../consts';
+import Base from '../layouts/Base.astro';
+
+const varCol = { header: 'Variable', class: 'font-mono text-xs text-brand-700' };
+const requiredColumns = [varCol, { header: 'Description', class: 'text-slate-600' }, { header: 'Format', class: 'text-slate-500' }];
+const optionalColumns = [varCol, { header: 'Default', class: 'font-mono text-xs text-slate-500' }, { header: 'Description', class: 'text-slate-600' }];
+
+const dockerRun = `docker run -d \\
+  --name downloader \\
+  -p 7000:7000 \\
+  --env-file .env \\
+  ${DOCKER_IMAGE}:latest`;
+
+const compose = `services:
+  downloader:
+    image: ${DOCKER_IMAGE}:latest
+    ports:
+      - '7000:7000'
+    environment:
+      - NODE_ENV=production
+      - ROCRATE_API_BASE_URL=https://api.example.com
+      - OIDC_ISSUER=https://idp.example.com
+      - OIDC_CLIENT_ID=\${OIDC_CLIENT_ID}
+      - OIDC_CLIENT_SECRET=\${OIDC_CLIENT_SECRET}
+      - OIDC_REDIRECT_URI=https://app.example.com/api/auth/callback
+      - SESSION_SECRET=\${SESSION_SECRET}
+      - S3_BUCKET=\${S3_BUCKET}
+      - EMAIL_FROM=noreply@example.com
+      - AWS_REGION=ap-southeast-2
+      - AWS_ACCESS_KEY_ID=\${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=\${AWS_SECRET_ACCESS_KEY}
+    restart: unless-stopped`;
+
+const healthCheck = 'curl http://localhost:7000/';
+
+const required = [
+  ['ROCRATE_API_BASE_URL', 'RO-Crate API endpoint', 'URL'],
+  ['OIDC_ISSUER', 'OIDC provider issuer URL', 'URL'],
+  ['OIDC_CLIENT_ID', 'OIDC client identifier', 'String'],
+  ['OIDC_CLIENT_SECRET', 'OIDC client secret', 'String'],
+  ['OIDC_REDIRECT_URI', 'OIDC callback URL', 'URL'],
+  ['SESSION_SECRET', 'Session encryption key', 'String (min 32 chars)'],
+  ['S3_BUCKET', 'S3 bucket for zip files', 'String'],
+  ['EMAIL_FROM', 'Sender email address', 'Email'],
+];
+
+const optional = [
+  ['NODE_ENV', 'development', 'Environment mode (development, production, test)'],
+  ['PORT', '7000', 'Server port'],
+  ['OIDC_SCOPES', 'public openid profile email', 'OIDC scopes to request'],
+  ['AWS_REGION', 'ap-southeast-2', 'AWS region'],
+];
+
+const prerequisites: { name: string; desc: string; href?: string }[] = [
+  {
+    name: 'RO-Crate API',
+    desc: 'The source the app reads collections, items and files from.',
+    href: ROCRATE_API_URL,
+  },
+  {
+    name: 'OIDC provider',
+    desc: 'An identity provider for single sign-on (issuer, client id & secret).',
+  },
+  { name: 'AWS S3 bucket', desc: 'Stores the generated zip files that users download.' },
+  {
+    name: 'AWS SES',
+    desc: 'Sends the notification email containing the presigned download link.',
+  },
+];
+---
+
+<Base
+  title="Self-hosting"
+  description="Deploy the Collection Downloader with Docker: prerequisites, environment variables, docker run and docker-compose examples."
+>
+  <header class="border-b border-slate-200 bg-gradient-to-b from-brand-50 to-white">
+    <div class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <p class="text-sm font-semibold tracking-wide text-brand-600 uppercase">Self-hosting</p>
+      <h1 class="mt-3 text-4xl font-bold tracking-tight text-slate-900">Deploy it with Docker</h1>
+      <p class="mt-4 text-lg text-slate-600">
+        The downloader ships as a multi-arch container image (<InlineCode>linux/amd64</InlineCode>
+        and <InlineCode>linux/arm64</InlineCode>), listening on port
+        <strong class="font-semibold text-slate-700">7000</strong>. Give it the services below and a handful of environment variables.
+      </p>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-3xl space-y-14 px-4 py-16 sm:px-6">
+    <!-- Prerequisites -->
+    <section>
+      <h2 class="text-2xl font-bold tracking-tight text-slate-900">What you'll need</h2>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        {prerequisites.map(({ name, desc, href }) => (
+            <div class="rounded-2xl border border-slate-200 bg-white p-5">
+              <h3 class="font-semibold text-slate-900">{name}</h3>
+              <p class="mt-1.5 text-sm text-slate-600">{desc}</p>
+              {href && (
+                <a
+                  href={href}
+                  rel="noopener"
+                  class="mt-2 inline-block text-sm font-medium text-brand-600 hover:underline"
+                >
+                  API reference →
+                </a>
+              )}
+            </div>
+          ))}
+      </div>
+    </section>
+
+    <!-- Quick start -->
+    <section>
+      <h2 class="text-2xl font-bold tracking-tight text-slate-900">Quick start</h2>
+      <p class="mt-3 text-slate-600">
+        Put your configuration in a <InlineCode>.env</InlineCode>
+        file (see the variables below) and run the image:
+      </p>
+      <CodeBlock code={dockerRun} filename="docker run" lang="bash" />
+      <p class="mt-2 text-sm text-slate-500">Then open <InlineCode>http://localhost:7000</InlineCode>.</p>
+    </section>
+
+    <!-- Required env -->
+    <section>
+      <h2 class="text-2xl font-bold tracking-tight text-slate-900">Required environment variables</h2>
+      <Table columns={requiredColumns} rows={required} />
+      <p class="mt-4 text-slate-600">
+        AWS credentials are also required — provide
+        <InlineCode>AWS_ACCESS_KEY_ID</InlineCode>
+        and <InlineCode>AWS_SECRET_ACCESS_KEY</InlineCode>, or attach an IAM role if you run on AWS infrastructure.
+      </p>
+    </section>
+
+    <!-- Optional env -->
+    <section>
+      <h2 class="text-2xl font-bold tracking-tight text-slate-900">Optional environment variables</h2>
+      <Table columns={optionalColumns} rows={optional} />
+    </section>
+
+    <!-- Compose -->
+    <section>
+      <h2 class="text-2xl font-bold tracking-tight text-slate-900">Docker Compose</h2>
+      <p class="mt-3 text-slate-600">
+        A complete <InlineCode>compose.yaml</InlineCode>
+        with secrets pulled from your environment:
+      </p>
+      <CodeBlock code={compose} filename="compose.yaml" lang="yaml" />
+    </section>
+
+    <!-- Health -->
+    <section>
+      <h2 class="text-2xl font-bold tracking-tight text-slate-900">Health check</h2>
+      <p class="mt-3 text-slate-600">The container is healthy when the root path responds:</p>
+      <CodeBlock code={healthCheck} lang="bash" />
+    </section>
+
+    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+      <p class="text-slate-600">
+        For the full architecture, build instructions and contribution guide, see the
+        <a href={GITHUB_URL} rel="noopener" class="font-medium text-brand-600 hover:underline">project README on GitHub</a>.
+      </p>
+    </div>
+  </div>
+</Base>

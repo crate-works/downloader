@@ -1,0 +1,47 @@
+---
+interface Props {
+  code: string;
+  filename?: string;
+  /** Language label shown in the header, e.g. "bash", "yaml". */
+  lang?: string;
+}
+
+const { code, filename, lang } = Astro.props;
+const label = filename ?? lang;
+---
+
+<div class="group my-4 overflow-hidden rounded-xl border border-slate-700 bg-slate-900">
+  <div class="flex items-center justify-between border-b border-slate-700/70 px-4 py-2">
+    <span class="font-mono text-xs text-slate-400">{label}</span>
+    <button
+      type="button"
+      class="copy-btn inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+      aria-label="Copy to clipboard"
+    >
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="9" y="9" width="13" height="13" rx="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+      </svg>
+      <span class="copy-label">Copy</span>
+    </button>
+  </div>
+  <pre class="overflow-x-auto p-4 text-sm leading-relaxed text-slate-100"><code>{code.trim()}</code></pre>
+</div>
+
+<script>
+for (const btn of document.querySelectorAll<HTMLButtonElement>('.copy-btn')) {
+  btn.addEventListener('click', async () => {
+    const code = btn.closest('div')?.parentElement?.querySelector('code');
+    if (!code?.textContent) return;
+    await navigator.clipboard.writeText(code.textContent);
+    const label = btn.querySelector('.copy-label');
+    if (label) {
+      const previous = label.textContent;
+      label.textContent = 'Copied!';
+      setTimeout(() => {
+        label.textContent = previous;
+      }, 1500);
+    }
+  });
+}
+</script>
