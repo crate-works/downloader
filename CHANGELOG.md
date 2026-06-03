@@ -1,3 +1,9 @@
+## [1.12.0](https://github.com/crate-works/downloader/compare/v1.11.0...v1.12.0) (2026-06-03)
+
+### Features
+
+* **export:** add stop button to cancel in-progress downloads ([a9f3d0d](https://github.com/crate-works/downloader/commit/a9f3d0dbb93b5cd07fafedf39a1b00f2913a23cd))
+
 ## [1.11.0](https://github.com/crate-works/downloader/compare/v1.10.0...v1.11.0) (2026-06-03)
 
 ### Features
