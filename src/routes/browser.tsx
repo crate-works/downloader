@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { SelectionSummary } from '#/components/browser/SelectionSummary.tsx';
 import { SearchResults } from '#/components/search/SearchResults.tsx';
 import { getAuthStatus } from '#/server/functions/auth.ts';
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '#/shared/constants.ts';
 import type { FacetFilters } from '#/shared/types/search.ts';
 
 const FACET_KEYS = ['collection_title', 'languages_with_code', 'countries', 'collector_name', 'full_identifier', 'entity_type'] as const;
@@ -11,6 +12,10 @@ const FACET_KEYS = ['collection_title', 'languages_with_code', 'countries', 'col
 const browserSearchSchema = z.object({
   q: z.string().min(1).optional(),
   page: z.number().int().positive().optional().default(1),
+  // `.default` keeps the param optional and fills an absent value; `.catch`
+  // handles an out-of-range one (e.g. a hand-edited ?pageSize=999) by falling
+  // back to the default rather than throwing.
+  pageSize: z.literal(PAGE_SIZE_OPTIONS).default(DEFAULT_PAGE_SIZE).catch(DEFAULT_PAGE_SIZE),
   collection_title: z.array(z.string()).optional(),
   languages_with_code: z.array(z.string()).optional(),
   countries: z.array(z.string()).optional(),
@@ -37,7 +42,7 @@ function BrowserPage() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const { q = '', page } = search;
+  const { q = '', page, pageSize } = search;
 
   const query = q;
 
@@ -53,12 +58,13 @@ function BrowserPage() {
     return Object.keys(result).length > 0 ? result : undefined;
   }, [search]);
 
-  const buildSearchParams = (overrides: { page?: number; filters?: FacetFilters; q?: string }) => {
+  const buildSearchParams = (overrides: { page?: number; filters?: FacetFilters; q?: string; pageSize?: number }) => {
     const activeQuery = overrides.q ?? q;
     const activeFilters = overrides.filters ?? filters ?? {};
     const params: Record<string, string | number | string[] | undefined> = {
       q: activeQuery || undefined,
       page: overrides.page ?? page,
+      pageSize: overrides.pageSize ?? pageSize,
     };
 
     for (const key of FACET_KEYS) {
@@ -83,13 +89,30 @@ function BrowserPage() {
     });
   };
 
+  const handlePageSizeChange = (newSize: number) => {
+    // Reset to page 1: the old page number rarely maps to a valid page under a
+    // new size, and the larger size means fewer pages overall.
+    navigate({
+      to: '/browser',
+      search: buildSearchParams({ page: 1, pageSize: newSize }),
+    });
+  };
+
   return (
     <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">{q ? 'Search Results' : 'Browse Collections'}</h1>
       </div>
 
-      <SearchResults query={query} page={page} filters={filters} onPageChange={handlePageChange} onFiltersChange={handleFiltersChange} />
+      <SearchResults
+        query={query}
+        page={page}
+        pageSize={pageSize}
+        filters={filters}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        onFiltersChange={handleFiltersChange}
+      />
 
       <SelectionSummary userEmail={user?.email} />
     </div>

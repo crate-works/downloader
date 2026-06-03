@@ -4,6 +4,7 @@ import { MimeTypeFilterBar } from '#/components/browser/MimeTypeFilterBar.tsx';
 import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
 import { ActiveFilterBadges } from '#/components/search/ActiveFilterBadges.tsx';
 import { FacetPanel } from '#/components/search/FacetPanel.tsx';
+import { PageSizePicker } from '#/components/search/PageSizePicker.tsx';
 import { Pagination } from '#/components/ui/pagination.tsx';
 import { usePagePrefetch } from '#/hooks/usePagePrefetch.ts';
 import { useSearch } from '#/hooks/useSearch.ts';
@@ -13,24 +14,25 @@ import type { FacetFilters } from '#/shared/types/search.ts';
 type SearchResultsProps = {
   query: string;
   page: number;
+  pageSize: number;
   filters?: FacetFilters | undefined;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
   onFiltersChange: (filters: FacetFilters) => void;
 };
 
-const RESULTS_PER_PAGE = 50;
-
-export const SearchResults = ({ query, page, filters, onPageChange, onFiltersChange }: SearchResultsProps) => {
-  const offset = (page - 1) * RESULTS_PER_PAGE;
+export const SearchResults = ({ query, page, pageSize, filters, onPageChange, onPageSizeChange, onFiltersChange }: SearchResultsProps) => {
+  const offset = (page - 1) * pageSize;
 
   const { data, isLoading, isFetching, isError, error } = useSearch({
     query,
     filters,
-    limit: RESULTS_PER_PAGE,
+    limit: pageSize,
     offset,
   });
 
   const activeFilters = filters ?? {};
+  const totalPages = data ? Math.ceil(data.total / pageSize) : 0;
 
   const prefetch = usePagePrefetch(data?.entities);
 
@@ -69,9 +71,12 @@ export const SearchResults = ({ query, page, filters, onPageChange, onFiltersCha
           </div>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground">
-              Found {data.total} result{data.total !== 1 ? 's' : ''} in {data.searchTime}ms
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-muted-foreground">
+                Found {data.total} result{data.total !== 1 ? 's' : ''} in {data.searchTime}ms
+              </p>
+              <PageSizePicker value={pageSize} onChange={onPageSizeChange} />
+            </div>
 
             <div className="space-y-2">
               {data.entities.map((entity) => {
@@ -93,9 +98,9 @@ export const SearchResults = ({ query, page, filters, onPageChange, onFiltersCha
               })}
             </div>
 
-            {Math.ceil(data.total / RESULTS_PER_PAGE) > 1 && (
+            {totalPages > 1 && (
               <div className="pt-4">
-                <Pagination currentPage={page} totalPages={Math.ceil(data.total / RESULTS_PER_PAGE)} onPageChange={onPageChange} />
+                <Pagination currentPage={page} totalPages={totalPages} onPageChange={onPageChange} />
               </div>
             )}
           </>
