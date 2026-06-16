@@ -1,3 +1,10 @@
+## [1.13.0](https://github.com/crate-works/downloader/compare/v1.12.0...v1.13.0) (2026-06-16)
+
+### Features
+
+* **browser:** add shift-click range selection for rows ([28328e9](https://github.com/crate-works/downloader/commit/28328e9d9e7719ecb273a283f0def82f48ef2de9))
+* **browser:** add sorting for search results, items and files ([5d76312](https://github.com/crate-works/downloader/commit/5d76312a4eeaa54aae2de8a397435f7af4cab096))
+
 ## [1.12.0](https://github.com/crate-works/downloader/compare/v1.11.0...v1.12.0) (2026-06-03)
 
 ### Features
