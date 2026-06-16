@@ -3,6 +3,7 @@ import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
 import { Button } from '#/components/ui/button.tsx';
 import { Checkbox } from '#/components/ui/checkbox.tsx';
 import { useEntity } from '#/hooks/useEntity.ts';
+import type { RangeCheckboxClick } from '#/hooks/useRangeSelect.ts';
 import type { Entity } from '#/shared/types/index.ts';
 import { useSelectionStore } from '#/store/selectionStore.ts';
 import { ItemList } from './ItemList.tsx';
@@ -10,9 +11,10 @@ import { ItemList } from './ItemList.tsx';
 type CollectionItemProps = {
   collectionId: string;
   collection?: Entity | undefined;
+  onCheckboxClick?: RangeCheckboxClick;
 };
 
-export const CollectionItem = ({ collectionId, collection }: CollectionItemProps) => {
+export const CollectionItem = ({ collectionId, collection, onCheckboxClick }: CollectionItemProps) => {
   const { expandedCollections, pendingCollections, selectCollection, deselectCollection, toggleCollectionExpand, getCollectionSelectionState } =
     useSelectionStore();
 
@@ -40,11 +42,12 @@ export const CollectionItem = ({ collectionId, collection }: CollectionItemProps
 
   return (
     <div className="border rounded-lg">
-      <div className="flex items-center gap-3 p-3 hover:bg-muted/50">
+      <div className="flex select-none items-center gap-3 p-3 hover:bg-muted/50">
         <Checkbox
           checked={selectionState === 'full'}
           indeterminate={selectionState === 'partial'}
           onCheckedChange={handleCheckboxChange}
+          onClick={(e) => onCheckboxClick?.(collectionId, e, selectionState === 'none')}
           aria-label={`Select ${collectionName}`}
         />
 

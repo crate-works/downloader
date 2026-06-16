@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import pLimit from 'p-limit';
 import { useEffect, useState } from 'react';
+import { isCollection, isObject } from '#/shared/types/entity.ts';
 import type { Entity, RoCrateFile } from '#/shared/types/index.ts';
 import { useSelectionStore } from '#/store/selectionStore.ts';
 import { filesQueryOptions, itemsQueryOptions } from './queries.ts';
@@ -35,9 +36,6 @@ const INITIAL: PagePrefetchState = {
 // Minimal shape needed to drive prefetching — satisfied by both the search
 // result entities (SearchEntity) and the richer Entity returned by the API.
 type PrefetchEntity = { id: string; entityType: string };
-
-const isCollection = (entity: PrefetchEntity) => entity.entityType.includes('Collection');
-const isObject = (entity: PrefetchEntity) => entity.entityType.includes('Object');
 
 // Eagerly resolve every item + file for the current page of search results,
 // warming the React Query cache (same keys the lazy hooks use) and the

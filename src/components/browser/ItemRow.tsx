@@ -1,15 +1,17 @@
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '#/components/ui/button.tsx';
 import { Checkbox } from '#/components/ui/checkbox.tsx';
+import type { RangeCheckboxClick } from '#/hooks/useRangeSelect.ts';
 import type { Entity } from '#/shared/types/index.ts';
 import { useSelectionStore } from '#/store/selectionStore.ts';
 import { FileList } from './FileList.tsx';
 
 type ItemRowProps = {
   item: Entity;
+  onCheckboxClick?: RangeCheckboxClick;
 };
 
-export const ItemRow = ({ item }: ItemRowProps) => {
+export const ItemRow = ({ item, onCheckboxClick }: ItemRowProps) => {
   const { expandedItems, pendingItems, selectItem, deselectItem, toggleItemExpand, getItemSelectionState } = useSelectionStore();
 
   const selectionState = getItemSelectionState(item.id);
@@ -30,11 +32,12 @@ export const ItemRow = ({ item }: ItemRowProps) => {
 
   return (
     <div className="border rounded-lg bg-background">
-      <div className="flex items-center gap-3 p-2 hover:bg-muted/50">
+      <div className="flex select-none items-center gap-3 p-2 hover:bg-muted/50">
         <Checkbox
           checked={selectionState === 'full'}
           indeterminate={selectionState === 'partial'}
           onCheckedChange={handleCheckboxChange}
+          onClick={(e) => onCheckboxClick?.(item.id, e, selectionState === 'none')}
           aria-label={`Select ${item.name}`}
         />
 

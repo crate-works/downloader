@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
 import { SortPicker } from '#/components/common/SortPicker.tsx';
 import { useItems } from '#/hooks/useItems.ts';
+import { useRangeSelect } from '#/hooks/useRangeSelect.ts';
 import { DEFAULT_ITEM_SORT, ITEM_SORT_OPTIONS, type ItemSortKey, sortItems } from '#/lib/sort.ts';
+import { useSelectionStore } from '#/store/selectionStore.ts';
 import { ItemRow } from './ItemRow.tsx';
 
 type ItemListProps = {
@@ -11,8 +13,23 @@ type ItemListProps = {
 
 export const ItemList = ({ collectionId }: ItemListProps) => {
   const { data, isLoading, error } = useItems(collectionId, true);
+  const { selectItem, deselectItem } = useSelectionStore();
   const [sort, setSort] = useState<ItemSortKey>(DEFAULT_ITEM_SORT);
   const sortedItems = useMemo(() => sortItems(data ?? [], sort), [data, sort]);
+
+  const orderedItemIds = useMemo(() => sortedItems.map((item) => item.id), [sortedItems]);
+  const handleCheckboxClick = useRangeSelect(
+    orderedItemIds,
+    useCallback(
+      (ids: string[], shouldSelect: boolean) => {
+        const apply = shouldSelect ? selectItem : deselectItem;
+        for (const id of ids) {
+          apply(id);
+        }
+      },
+      [selectItem, deselectItem],
+    ),
+  );
 
   if (isLoading) {
     return (
@@ -40,7 +57,7 @@ export const ItemList = ({ collectionId }: ItemListProps) => {
         {data.length > 1 && <SortPicker value={sort} options={ITEM_SORT_OPTIONS} onChange={setSort} />}
       </div>
       {sortedItems.map((item) => (
-        <ItemRow key={item.id} item={item} />
+        <ItemRow key={item.id} item={item} onCheckboxClick={handleCheckboxClick} />
       ))}
     </div>
   );

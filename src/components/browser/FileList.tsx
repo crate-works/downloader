@@ -4,6 +4,7 @@ import { FileSize } from '#/components/common/FileSize.tsx';
 import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
 import { SortPicker } from '#/components/common/SortPicker.tsx';
 import { useFiles } from '#/hooks/useFiles.ts';
+import { useRangeSelect } from '#/hooks/useRangeSelect.ts';
 import { DEFAULT_FILE_SORT, FILE_SORT_OPTIONS, type FileSortKey, sortFiles } from '#/lib/sort.ts';
 import type { RoCrateFile } from '#/shared/types/index.ts';
 import { useSelectionStore } from '#/store/selectionStore.ts';
@@ -15,7 +16,7 @@ type FileListProps = {
 
 export const FileList = ({ itemId }: FileListProps) => {
   const { data, isLoading, error } = useFiles(itemId, true);
-  const { isFileIncluded, selectedFiles } = useSelectionStore();
+  const { isFileIncluded, selectedFiles, setFilesSelected } = useSelectionStore();
   const [sort, setSort] = useState<FileSortKey>(DEFAULT_FILE_SORT);
 
   const { allFiles, includedCount, totalSize, selectedSize, restrictedCount } = useMemo(() => {
@@ -41,6 +42,11 @@ export const FileList = ({ itemId }: FileListProps) => {
   // the memo above whenever the selection changes) so re-sorting only happens
   // when the files or chosen order actually change.
   const sortedFiles = useMemo(() => sortFiles(data ?? [], sort), [data, sort]);
+
+  // Only selectable (included, accessible) files take part in a shift-click
+  // range, so disabled files in between are skipped automatically.
+  const selectableFileIds = useMemo(() => sortedFiles.filter((file) => isFileIncluded(file)).map((file) => file.id), [sortedFiles, isFileIncluded]);
+  const handleCheckboxClick = useRangeSelect(selectableFileIds, setFilesSelected);
 
   if (isLoading) {
     return (
@@ -88,7 +94,7 @@ export const FileList = ({ itemId }: FileListProps) => {
         </div>
       )}
       {sortedFiles.map((file) => (
-        <FileRow key={file.id} file={file} disabled={!isFileIncluded(file)} />
+        <FileRow key={file.id} file={file} disabled={!isFileIncluded(file)} onCheckboxClick={handleCheckboxClick} />
       ))}
     </div>
   );

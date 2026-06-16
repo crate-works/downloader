@@ -1,6 +1,7 @@
 import { File, Lock, Music, Video } from 'lucide-react';
 import { FileSize } from '#/components/common/FileSize.tsx';
 import { Checkbox } from '#/components/ui/checkbox.tsx';
+import type { RangeCheckboxClick } from '#/hooks/useRangeSelect.ts';
 import { cn } from '#/lib/utils.ts';
 import { getFileType, getQualityTier } from '#/shared/types/file.ts';
 import type { RoCrateFile } from '#/shared/types/index.ts';
@@ -9,9 +10,10 @@ import { useSelectionStore } from '#/store/selectionStore.ts';
 type FileRowProps = {
   file: RoCrateFile;
   disabled?: boolean;
+  onCheckboxClick?: RangeCheckboxClick;
 };
 
-export const FileRow = ({ file, disabled = false }: FileRowProps) => {
+export const FileRow = ({ file, disabled = false, onCheckboxClick }: FileRowProps) => {
   const { selectedFiles, toggleFileSelection } = useSelectionStore();
 
   const isSelected = selectedFiles.has(file.id);
@@ -39,8 +41,14 @@ export const FileRow = ({ file, disabled = false }: FileRowProps) => {
   };
 
   return (
-    <div className={cn('flex items-center gap-2 p-1.5 rounded', isDisabled ? 'opacity-40' : 'hover:bg-muted/50')}>
-      <Checkbox checked={isSelected && !isDisabled} onCheckedChange={handleCheckboxChange} disabled={isDisabled} aria-label={`Select ${file.filename}`} />
+    <div className={cn('flex select-none items-center gap-2 p-1.5 rounded', isDisabled ? 'opacity-40' : 'hover:bg-muted/50')}>
+      <Checkbox
+        checked={isSelected && !isDisabled}
+        onCheckedChange={handleCheckboxChange}
+        onClick={(e) => onCheckboxClick?.(file.id, e, !isSelected)}
+        disabled={isDisabled}
+        aria-label={`Select ${file.filename}`}
+      />
 
       <span className="text-muted-foreground">{getFileIcon()}</span>
 

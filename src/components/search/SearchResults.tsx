@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { CollectionItem } from '#/components/browser/CollectionItem.tsx';
 import { ItemRow } from '#/components/browser/ItemRow.tsx';
 import { MimeTypeFilterBar } from '#/components/browser/MimeTypeFilterBar.tsx';
@@ -8,10 +9,12 @@ import { FacetPanel } from '#/components/search/FacetPanel.tsx';
 import { PageSizePicker } from '#/components/search/PageSizePicker.tsx';
 import { Pagination } from '#/components/ui/pagination.tsx';
 import { usePagePrefetch } from '#/hooks/usePagePrefetch.ts';
+import { useRangeSelect } from '#/hooks/useRangeSelect.ts';
 import { useSearch } from '#/hooks/useSearch.ts';
 import { parseSearchSort, SEARCH_SORT_OPTIONS, type SearchSortKey } from '#/lib/sort.ts';
-import type { Entity } from '#/shared/types/entity.ts';
+import { type Entity, isCollection, isObject } from '#/shared/types/entity.ts';
 import type { FacetFilters } from '#/shared/types/search.ts';
+import { useSelectionStore } from '#/store/selectionStore.ts';
 
 type SearchResultsProps = {
   query: string;
@@ -40,6 +43,43 @@ export const SearchResults = ({ query, page, pageSize, sort, filters, onPageChan
   const totalPages = data ? Math.ceil(data.total / pageSize) : 0;
 
   const prefetch = usePagePrefetch(data?.entities);
+
+  const { selectCollection, deselectCollection, selectItem, deselectItem } = useSelectionStore();
+
+  // Map each selectable result to its kind so a shift-click range can dispatch
+  // the right select/deselect action per row (results may mix collections and
+  // items). Other entity kinds are not selectable and stay out of the range.
+  const entityKindById = useMemo(() => {
+    const kinds = new Map<string, 'collection' | 'item'>();
+    for (const entity of data?.entities ?? []) {
+      if (isCollection(entity)) {
+        kinds.set(entity.id, 'collection');
+      } else if (isObject(entity)) {
+        kinds.set(entity.id, 'item');
+      }
+    }
+    return kinds;
+  }, [data?.entities]);
+
+  const orderedResultIds = useMemo(
+    () => (data?.entities ?? []).filter((entity) => entityKindById.has(entity.id)).map((entity) => entity.id),
+    [data?.entities, entityKindById],
+  );
+
+  const handleCheckboxClick = useRangeSelect(
+    orderedResultIds,
+    useCallback(
+      (ids: string[], shouldSelect: boolean) => {
+        for (const id of ids) {
+          const isCollectionId = entityKindById.get(id) === 'collection';
+          const select = isCollectionId ? selectCollection : selectItem;
+          const deselect = isCollectionId ? deselectCollection : deselectItem;
+          (shouldSelect ? select : deselect)(id);
+        }
+      },
+      [entityKindById, selectCollection, deselectCollection, selectItem, deselectItem],
+    ),
+  );
 
   if (isLoading) {
     return (
@@ -88,12 +128,12 @@ export const SearchResults = ({ query, page, pageSize, sort, filters, onPageChan
 
             <div className="space-y-2">
               {data.entities.map((entity) => {
-                if (entity.entityType.includes('Collection')) {
-                  return <CollectionItem key={entity.id} collectionId={entity.id} />;
+                if (isCollection(entity)) {
+                  return <CollectionItem key={entity.id} collectionId={entity.id} onCheckboxClick={handleCheckboxClick} />;
                 }
 
-                if (entity.entityType.includes('Object')) {
-                  return <ItemRow key={entity.id} item={entity as unknown as Entity} />;
+                if (isObject(entity)) {
+                  return <ItemRow key={entity.id} item={entity as unknown as Entity} onCheckboxClick={handleCheckboxClick} />;
                 }
 
                 return (
