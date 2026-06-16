@@ -1,8 +1,10 @@
 import { Lock } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { FileSize } from '#/components/common/FileSize.tsx';
 import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
+import { SortPicker } from '#/components/common/SortPicker.tsx';
 import { useFiles } from '#/hooks/useFiles.ts';
+import { DEFAULT_FILE_SORT, FILE_SORT_OPTIONS, type FileSortKey, sortFiles } from '#/lib/sort.ts';
 import type { RoCrateFile } from '#/shared/types/index.ts';
 import { useSelectionStore } from '#/store/selectionStore.ts';
 import { FileRow } from './FileRow.tsx';
@@ -14,6 +16,7 @@ type FileListProps = {
 export const FileList = ({ itemId }: FileListProps) => {
   const { data, isLoading, error } = useFiles(itemId, true);
   const { isFileIncluded, selectedFiles } = useSelectionStore();
+  const [sort, setSort] = useState<FileSortKey>(DEFAULT_FILE_SORT);
 
   const { allFiles, includedCount, totalSize, selectedSize, restrictedCount } = useMemo(() => {
     if (!data) {
@@ -33,6 +36,11 @@ export const FileList = ({ itemId }: FileListProps) => {
       restrictedCount: restricted.length,
     };
   }, [data, isFileIncluded, selectedFiles]);
+
+  // Sort from `data` (not `allFiles`, which is the same array but re-wrapped by
+  // the memo above whenever the selection changes) so re-sorting only happens
+  // when the files or chosen order actually change.
+  const sortedFiles = useMemo(() => sortFiles(data ?? [], sort), [data, sort]);
 
   if (isLoading) {
     return (
@@ -61,7 +69,7 @@ export const FileList = ({ itemId }: FileListProps) => {
           </span>
         </div>
       )}
-      <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground mb-2">
         <span>
           {includedCount} of {allFiles.length} file{allFiles.length !== 1 ? 's' : ''} available
         </span>
@@ -74,7 +82,12 @@ export const FileList = ({ itemId }: FileListProps) => {
           )}
         </span>
       </div>
-      {allFiles.map((file) => (
+      {allFiles.length > 1 && (
+        <div className="flex justify-end mb-2">
+          <SortPicker value={sort} options={FILE_SORT_OPTIONS} onChange={setSort} />
+        </div>
+      )}
+      {sortedFiles.map((file) => (
         <FileRow key={file.id} file={file} disabled={!isFileIncluded(file)} />
       ))}
     </div>

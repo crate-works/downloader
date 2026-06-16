@@ -10,7 +10,7 @@ export type SearchRequest = {
   filters?: FacetFilters | undefined;
   limit?: number | undefined;
   offset?: number | undefined;
-  sort?: 'id' | 'name' | 'createdAt' | 'updatedAt' | undefined;
+  sort?: 'id' | 'name' | 'identifier' | 'originatedOn' | 'createdAt' | 'updatedAt' | undefined;
   order?: 'asc' | 'desc' | undefined;
 };
 

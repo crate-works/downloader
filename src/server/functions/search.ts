@@ -9,7 +9,7 @@ const searchSchema = z.object({
   filters: z.record(z.string(), z.array(z.string())).optional(),
   limit: z.number().int().positive().optional(),
   offset: z.number().int().nonnegative().optional(),
-  sort: z.enum(['id', 'name', 'createdAt', 'updatedAt']).optional(),
+  sort: z.enum(['id', 'name', 'identifier', 'originatedOn', 'createdAt', 'updatedAt']).optional(),
   order: z.enum(['asc', 'desc']).optional(),
 });
 

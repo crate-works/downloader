@@ -1,5 +1,8 @@
+import { useMemo, useState } from 'react';
 import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
+import { SortPicker } from '#/components/common/SortPicker.tsx';
 import { useItems } from '#/hooks/useItems.ts';
+import { DEFAULT_ITEM_SORT, ITEM_SORT_OPTIONS, type ItemSortKey, sortItems } from '#/lib/sort.ts';
 import { ItemRow } from './ItemRow.tsx';
 
 type ItemListProps = {
@@ -8,6 +11,8 @@ type ItemListProps = {
 
 export const ItemList = ({ collectionId }: ItemListProps) => {
   const { data, isLoading, error } = useItems(collectionId, true);
+  const [sort, setSort] = useState<ItemSortKey>(DEFAULT_ITEM_SORT);
+  const sortedItems = useMemo(() => sortItems(data ?? [], sort), [data, sort]);
 
   if (isLoading) {
     return (
@@ -28,10 +33,13 @@ export const ItemList = ({ collectionId }: ItemListProps) => {
 
   return (
     <div className="space-y-2">
-      <div className="text-sm text-muted-foreground mb-2">
-        {data.length} item{data.length !== 1 ? 's' : ''}
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <span className="text-sm text-muted-foreground">
+          {data.length} item{data.length !== 1 ? 's' : ''}
+        </span>
+        {data.length > 1 && <SortPicker value={sort} options={ITEM_SORT_OPTIONS} onChange={setSort} />}
       </div>
-      {data.map((item) => (
+      {sortedItems.map((item) => (
         <ItemRow key={item.id} item={item} />
       ))}
     </div>

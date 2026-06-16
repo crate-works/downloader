@@ -2,12 +2,14 @@ import { CollectionItem } from '#/components/browser/CollectionItem.tsx';
 import { ItemRow } from '#/components/browser/ItemRow.tsx';
 import { MimeTypeFilterBar } from '#/components/browser/MimeTypeFilterBar.tsx';
 import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
+import { SortPicker } from '#/components/common/SortPicker.tsx';
 import { ActiveFilterBadges } from '#/components/search/ActiveFilterBadges.tsx';
 import { FacetPanel } from '#/components/search/FacetPanel.tsx';
 import { PageSizePicker } from '#/components/search/PageSizePicker.tsx';
 import { Pagination } from '#/components/ui/pagination.tsx';
 import { usePagePrefetch } from '#/hooks/usePagePrefetch.ts';
 import { useSearch } from '#/hooks/useSearch.ts';
+import { parseSearchSort, SEARCH_SORT_OPTIONS, type SearchSortKey } from '#/lib/sort.ts';
 import type { Entity } from '#/shared/types/entity.ts';
 import type { FacetFilters } from '#/shared/types/search.ts';
 
@@ -15,13 +17,15 @@ type SearchResultsProps = {
   query: string;
   page: number;
   pageSize: number;
+  sort: SearchSortKey;
   filters?: FacetFilters | undefined;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
+  onSortChange: (sort: SearchSortKey) => void;
   onFiltersChange: (filters: FacetFilters) => void;
 };
 
-export const SearchResults = ({ query, page, pageSize, filters, onPageChange, onPageSizeChange, onFiltersChange }: SearchResultsProps) => {
+export const SearchResults = ({ query, page, pageSize, sort, filters, onPageChange, onPageSizeChange, onSortChange, onFiltersChange }: SearchResultsProps) => {
   const offset = (page - 1) * pageSize;
 
   const { data, isLoading, isFetching, isError, error } = useSearch({
@@ -29,6 +33,7 @@ export const SearchResults = ({ query, page, pageSize, filters, onPageChange, on
     filters,
     limit: pageSize,
     offset,
+    ...parseSearchSort(sort),
   });
 
   const activeFilters = filters ?? {};
@@ -75,7 +80,10 @@ export const SearchResults = ({ query, page, pageSize, filters, onPageChange, on
               <p className="text-sm text-muted-foreground">
                 Found {data.total} result{data.total !== 1 ? 's' : ''} in {data.searchTime}ms
               </p>
-              <PageSizePicker value={pageSize} onChange={onPageSizeChange} />
+              <div className="flex flex-wrap items-center gap-4">
+                <SortPicker value={sort} options={SEARCH_SORT_OPTIONS} onChange={onSortChange} />
+                <PageSizePicker value={pageSize} onChange={onPageSizeChange} />
+              </div>
             </div>
 
             <div className="space-y-2">
