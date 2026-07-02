@@ -3,11 +3,10 @@ import { X } from 'lucide-react';
 import type { FacetFilters } from '#/shared/types/search.ts';
 
 const FACET_LABEL_MAP: Record<string, string> = {
-  collection_title: 'Collection',
+  rootCollection: 'Collection',
   languages_with_code: 'Language',
   countries: 'Country',
   collector_name: 'Collector',
-  full_identifier: 'Identifier',
   entity_type: 'Type',
 };
 

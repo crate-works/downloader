@@ -7,15 +7,14 @@ import type { FacetFilters, Facets } from '#/shared/types/search.ts';
 import { FacetCategorySection } from './FacetCategorySection.tsx';
 
 const FACET_LABEL_MAP: Record<string, string> = {
-  collection_title: 'Collection',
+  rootCollection: 'Collection',
   languages_with_code: 'Language',
   countries: 'Country',
   collector_name: 'Collector',
-  full_identifier: 'Identifier',
   entity_type: 'Type',
 };
 
-const FACET_ORDER = ['collection_title', 'languages_with_code', 'countries', 'collector_name', 'full_identifier', 'entity_type'];
+const FACET_ORDER = ['rootCollection', 'languages_with_code', 'countries', 'collector_name', 'entity_type'];
 
 const filtersEqual = (a: FacetFilters, b: FacetFilters): boolean => {
   const aKeys = Object.keys(a).filter((k) => (a[k]?.length ?? 0) > 0);

@@ -10,7 +10,7 @@ import type { FacetFilters } from '#/shared/types/search.ts';
 
 const SEARCH_SORT_KEYS = SEARCH_SORT_OPTIONS.map((option) => option.value) as [SearchSortKey, ...SearchSortKey[]];
 
-const FACET_KEYS = ['collection_title', 'languages_with_code', 'countries', 'collector_name', 'full_identifier', 'entity_type'] as const;
+const FACET_KEYS = ['rootCollection', 'languages_with_code', 'countries', 'collector_name', 'entity_type'] as const;
 
 const browserSearchSchema = z.object({
   q: z.string().min(1).optional(),
@@ -22,11 +22,10 @@ const browserSearchSchema = z.object({
   // Single combined key (e.g. `name-asc`); SearchResults splits it into the
   // sort/order pair the search API wants. `.catch` guards a hand-edited value.
   sort: z.enum(SEARCH_SORT_KEYS).default(DEFAULT_SEARCH_SORT).catch(DEFAULT_SEARCH_SORT),
-  collection_title: z.array(z.string()).optional(),
+  rootCollection: z.array(z.string()).optional(),
   languages_with_code: z.array(z.string()).optional(),
   countries: z.array(z.string()).optional(),
   collector_name: z.array(z.string()).optional(),
-  full_identifier: z.array(z.string()).optional(),
   entity_type: z.array(z.string()).optional(),
 });
 
