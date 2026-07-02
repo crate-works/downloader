@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import pLimit from 'p-limit';
 import { useEffect, useState } from 'react';
-import { isCollection, isObject } from '#/shared/types/entity.ts';
-import type { Entity, RoCrateFile } from '#/shared/types/index.ts';
+import { ENTITY_TYPE, isCollection, isEssence, isObject } from '#/shared/types/entity.ts';
+import type { Entity, EntityRef, RoCrateFile } from '#/shared/types/index.ts';
 import { useSelectionStore } from '#/store/selectionStore.ts';
 import { filesQueryOptions, itemsQueryOptions } from './queries.ts';
 
@@ -33,9 +33,10 @@ const INITIAL: PagePrefetchState = {
   capped: false,
 };
 
-// Minimal shape needed to drive prefetching — satisfied by both the search
-// result entities (SearchEntity) and the richer Entity returned by the API.
-type PrefetchEntity = { id: string; entityType: string };
+// Minimal shape needed to drive prefetching, satisfied by the search result
+// entities (SearchEntity). `memberOf` is the parent ref — for an essence it
+// points at the item whose file list we prefetch to resolve it.
+type PrefetchEntity = { id: string; entityType: string; memberOf?: EntityRef | undefined };
 
 // Eagerly resolve every item + file for the current page of search results,
 // warming the React Query cache (same keys the lazy hooks use) and the
@@ -67,6 +68,13 @@ export const usePagePrefetch = (entities: PrefetchEntity[] | undefined): PagePre
     const resolveItems = async (): Promise<PrefetchEntity[]> => {
       const collections = entities.filter(isCollection);
       const directItems = entities.filter(isObject);
+      // An essence is a file; warming its metadata means fetching its parent
+      // item's file list. Multiple essences can share one parent, and a parent
+      // may also appear directly or via a collection, so these are deduped below.
+      const essenceParentIds = entities
+        .filter(isEssence)
+        .map((essence) => essence.memberOf?.id)
+        .filter((id): id is string => !!id);
 
       const nested = await Promise.all(
         collections.map((collection) =>
@@ -92,7 +100,21 @@ export const usePagePrefetch = (entities: PrefetchEntity[] | undefined): PagePre
         ),
       );
 
-      return [...directItems, ...nested.flat()];
+      // Dedupe by id so each item's files are fetched (and counted) once. Only
+      // the id drives the file fetch, so normalise to the minimal shape.
+      const byId = new Map<string, PrefetchEntity>();
+      const add = (id: string, entityType: string) => {
+        if (!byId.has(id)) {
+          byId.set(id, { id, entityType });
+        }
+      };
+      for (const item of directItems) add(item.id, item.entityType);
+      for (const items of nested) {
+        for (const item of items) add(item.id, item.entityType);
+      }
+      for (const id of essenceParentIds) add(id, ENTITY_TYPE.object);
+
+      return [...byId.values()];
     };
 
     const resolveFiles = async (items: PrefetchEntity[]) => {

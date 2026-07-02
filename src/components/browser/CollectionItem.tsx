@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { EntityBadge } from '#/components/common/EntityBadge.tsx';
 import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
 import { Button } from '#/components/ui/button.tsx';
 import { Checkbox } from '#/components/ui/checkbox.tsx';
@@ -58,7 +59,7 @@ export const CollectionItem = ({ collectionId, collection, onCheckboxClick }: Co
         <div className="flex-1 min-w-0">
           <div className="font-medium truncate flex items-center gap-2">
             {isEntityLoading ? <LoadingSpinner size="sm" /> : collectionName}
-            <span className="shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">Collection</span>
+            <EntityBadge kind="collection" />
             {isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
           <div className="italic">{collectionId}</div>

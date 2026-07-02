@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { CollectionItem } from '#/components/browser/CollectionItem.tsx';
+import { EssenceRow } from '#/components/browser/EssenceRow.tsx';
 import { ItemRow } from '#/components/browser/ItemRow.tsx';
 import { MimeTypeFilterBar } from '#/components/browser/MimeTypeFilterBar.tsx';
 import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
@@ -12,7 +13,7 @@ import { usePagePrefetch } from '#/hooks/usePagePrefetch.ts';
 import { useRangeSelect } from '#/hooks/useRangeSelect.ts';
 import { useSearch } from '#/hooks/useSearch.ts';
 import { parseSearchSort, SEARCH_SORT_OPTIONS, type SearchSortKey } from '#/lib/sort.ts';
-import { type Entity, isCollection, isObject } from '#/shared/types/entity.ts';
+import { type Entity, isCollection, isEssence, isObject } from '#/shared/types/entity.ts';
 import type { FacetFilters } from '#/shared/types/search.ts';
 import { useSelectionStore } from '#/store/selectionStore.ts';
 
@@ -44,18 +45,21 @@ export const SearchResults = ({ query, page, pageSize, sort, filters, onPageChan
 
   const prefetch = usePagePrefetch(data?.entities);
 
-  const { selectCollection, deselectCollection, selectItem, deselectItem } = useSelectionStore();
+  const { selectCollection, deselectCollection, selectItem, deselectItem, setFilesSelected } = useSelectionStore();
 
   // Map each selectable result to its kind so a shift-click range can dispatch
-  // the right select/deselect action per row (results may mix collections and
-  // items). Other entity kinds are not selectable and stay out of the range.
+  // the right select/deselect action per row (results may mix collections,
+  // items and essences). Other entity kinds are not selectable and stay out of
+  // the range.
   const entityKindById = useMemo(() => {
-    const kinds = new Map<string, 'collection' | 'item'>();
+    const kinds = new Map<string, 'collection' | 'item' | 'essence'>();
     for (const entity of data?.entities ?? []) {
       if (isCollection(entity)) {
         kinds.set(entity.id, 'collection');
       } else if (isObject(entity)) {
         kinds.set(entity.id, 'item');
+      } else if (isEssence(entity)) {
+        kinds.set(entity.id, 'essence');
       }
     }
     return kinds;
@@ -71,13 +75,18 @@ export const SearchResults = ({ query, page, pageSize, sort, filters, onPageChan
     useCallback(
       (ids: string[], shouldSelect: boolean) => {
         for (const id of ids) {
-          const isCollectionId = entityKindById.get(id) === 'collection';
-          const select = isCollectionId ? selectCollection : selectItem;
-          const deselect = isCollectionId ? deselectCollection : deselectItem;
-          (shouldSelect ? select : deselect)(id);
+          const kind = entityKindById.get(id);
+          if (kind === 'collection') {
+            (shouldSelect ? selectCollection : deselectCollection)(id);
+          } else if (kind === 'item') {
+            (shouldSelect ? selectItem : deselectItem)(id);
+          } else if (kind === 'essence') {
+            // An essence is a file; its search id is the file id.
+            setFilesSelected([id], shouldSelect);
+          }
         }
       },
-      [entityKindById, selectCollection, deselectCollection, selectItem, deselectItem],
+      [entityKindById, selectCollection, deselectCollection, selectItem, deselectItem, setFilesSelected],
     ),
   );
 
@@ -134,6 +143,10 @@ export const SearchResults = ({ query, page, pageSize, sort, filters, onPageChan
 
                 if (isObject(entity)) {
                   return <ItemRow key={entity.id} item={entity as unknown as Entity} onCheckboxClick={handleCheckboxClick} />;
+                }
+
+                if (isEssence(entity)) {
+                  return <EssenceRow key={entity.id} essence={entity} onCheckboxClick={handleCheckboxClick} />;
                 }
 
                 return (

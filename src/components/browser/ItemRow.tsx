@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { EntityBadge } from '#/components/common/EntityBadge.tsx';
 import { Button } from '#/components/ui/button.tsx';
 import { Checkbox } from '#/components/ui/checkbox.tsx';
 import type { RangeCheckboxClick } from '#/hooks/useRangeSelect.ts';
@@ -48,7 +49,7 @@ export const ItemRow = ({ item, onCheckboxClick }: ItemRowProps) => {
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium truncate flex items-center gap-2">
             {item.name}
-            <span className="shrink-0 rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">Item</span>
+            <EntityBadge kind="item" />
             {isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
           <div className="text-sm italic">{item.id}</div>

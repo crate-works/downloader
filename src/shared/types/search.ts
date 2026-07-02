@@ -1,3 +1,5 @@
+import type { EntityRef } from './file.ts';
+
 export type FacetBucket = { name: string; count: number };
 
 export type Facets = Record<string, FacetBucket[]>;
@@ -14,12 +16,12 @@ export type SearchRequest = {
   order?: 'asc' | 'desc' | undefined;
 };
 
-type SearchEntity = {
+export type SearchEntity = {
   id: string;
   name: string;
   description?: string;
   entityType: string;
-  memberOf?: string;
+  memberOf?: EntityRef;
   rootCollection?: string;
   access: { metadata: boolean; content: boolean };
   searchExtra: { score: number; highlight: Record<string, string[]> };

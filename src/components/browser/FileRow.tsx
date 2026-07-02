@@ -1,4 +1,5 @@
 import { File, Lock, Music, Video } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { FileSize } from '#/components/common/FileSize.tsx';
 import { Checkbox } from '#/components/ui/checkbox.tsx';
 import type { RangeCheckboxClick } from '#/hooks/useRangeSelect.ts';
@@ -10,10 +11,13 @@ import { useSelectionStore } from '#/store/selectionStore.ts';
 type FileRowProps = {
   file: RoCrateFile;
   disabled?: boolean;
-  onCheckboxClick?: RangeCheckboxClick;
+  onCheckboxClick?: RangeCheckboxClick | undefined;
+  // Optional badge rendered next to the filename (e.g. an "Essence" marker when
+  // the file was surfaced directly by search rather than by browsing its item).
+  badge?: ReactNode | undefined;
 };
 
-export const FileRow = ({ file, disabled = false, onCheckboxClick }: FileRowProps) => {
+export const FileRow = ({ file, disabled = false, onCheckboxClick, badge }: FileRowProps) => {
   const { selectedFiles, toggleFileSelection } = useSelectionStore();
 
   const isSelected = selectedFiles.has(file.id);
@@ -53,7 +57,10 @@ export const FileRow = ({ file, disabled = false, onCheckboxClick }: FileRowProp
       <span className="text-muted-foreground">{getFileIcon()}</span>
 
       <div className="flex-1 min-w-0">
-        <div className="text-sm truncate">{file.filename}</div>
+        <div className="text-sm truncate flex items-center gap-2">
+          {file.filename}
+          {badge}
+        </div>
       </div>
 
       {!hasAccess && (
