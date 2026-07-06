@@ -30,4 +30,36 @@ find .output -type f \
   -e "s|${TOKEN}|${BASE_PATH#/}|g" \
   {} +
 
+# The substitution changes asset file sizes, but Nitro bakes each public
+# asset's size and etag into a manifest in the server bundle at build time.
+# Recompute them from the rewritten files or responses are served with a
+# stale Content-Length (ERR_CONTENT_LENGTH_MISMATCH in browsers).
+node --input-type=module - <<'PATCH_MANIFEST'
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+
+const manifestFile = '.output/server/index.mjs';
+const source = readFileSync(manifestFile, 'utf8');
+let patched = 0;
+
+const output = source.replace(
+  /"etag": "\\"[^"]+\\"",(\s*"mtime": "[^"]*",\s*)"size": \d+,(\s*)"path": "([^"]+)"/g,
+  (_match, mtimePart, sizeWhitespace, relPath) => {
+    const content = readFileSync(resolve(dirname(manifestFile), relPath));
+    const etag = `${content.length.toString(16)}-${createHash('sha1').update(content).digest('base64').replace(/=+$/, '')}`;
+    patched += 1;
+    return `"etag": "\\"${etag}\\"",${mtimePart}"size": ${content.length},${sizeWhitespace}"path": "${relPath}"`;
+  },
+);
+
+if (patched === 0) {
+  console.error(`ERROR: no public asset entries found in ${manifestFile}; the Nitro manifest format may have changed`);
+  process.exit(1);
+}
+
+writeFileSync(manifestFile, output);
+console.log(`Recomputed size/etag for ${patched} static assets`);
+PATCH_MANIFEST
+
 exec "$@"

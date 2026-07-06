@@ -93,5 +93,13 @@ jobs:
               exit 1
             fi
 
+            # Fetch a static asset too: curl fails on Content-Length mismatch,
+            # which SSR HTML (dynamic response) cannot catch
+            asset=$(echo "$html" | grep -o "\"${bp}/assets/[^\"]*\.js\"" | head -1 | tr -d '"')
+            if ! curl -fsS -o /dev/null "http://localhost:7000${asset}"; then
+              echo "FAIL: static asset ${asset} did not serve cleanly"
+              exit 1
+            fi
+
             docker rm -f "$cid" >/dev/null
           done
