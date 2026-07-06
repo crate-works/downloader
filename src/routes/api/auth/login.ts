@@ -1,13 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { config } from '#/server/services/config.ts';
-import { type CookieOptions, serializeCookie } from '#/server/services/cookies.ts';
+import { type CookieOptions, cookiePath, serializeCookie } from '#/server/services/cookies.ts';
 import { generateState, getAuthorizationUrl } from '#/server/services/oidc.ts';
 
 const cookieOptions: CookieOptions = {
   httpOnly: true,
   secure: config.NODE_ENV === 'production',
   sameSite: 'lax',
-  path: '/',
+  path: cookiePath,
   maxAge: 600,
 };
 

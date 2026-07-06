@@ -1,13 +1,22 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { config } from '#/server/services/config.ts';
-import { type CookieOptions, getCookieFromRequest, serializeCookie } from '#/server/services/cookies.ts';
+import { type CookieOptions, cookiePath, getCookieFromRequest, serializeCookie } from '#/server/services/cookies.ts';
 import { exchangeCodeForTokens, getUserInfo, type UserInfo, verifyIdToken } from '#/server/services/oidc.ts';
+import { appPath } from '#/shared/paths.ts';
+
+const errorRedirect = (message: string): Response =>
+  new Response(null, {
+    status: 302,
+    headers: {
+      Location: `${appPath()}?error=${encodeURIComponent(message)}`,
+    },
+  });
 
 const createCookieOptions = (maxAge: number): CookieOptions => ({
   httpOnly: true,
   secure: config.NODE_ENV === 'production',
   sameSite: 'lax',
-  path: '/',
+  path: cookiePath,
   maxAge,
 });
 
@@ -24,32 +33,17 @@ export const Route = createFileRoute('/api/auth/callback')({
         if (error) {
           console.error('OIDC error:', error, errorDescription);
 
-          return new Response(null, {
-            status: 302,
-            headers: {
-              Location: `/?error=${encodeURIComponent(errorDescription || error)}`,
-            },
-          });
+          return errorRedirect(errorDescription || error);
         }
 
         if (!code) {
-          return new Response(null, {
-            status: 302,
-            headers: {
-              Location: '/?error=No%20authorization%20code%20received',
-            },
-          });
+          return errorRedirect('No authorization code received');
         }
 
         const savedState = getCookieFromRequest(request, 'oauth_state');
 
         if (!savedState || savedState !== state) {
-          return new Response(null, {
-            status: 302,
-            headers: {
-              Location: '/?error=Invalid%20state%20parameter',
-            },
-          });
+          return errorRedirect('Invalid state parameter');
         }
 
         try {
@@ -66,7 +60,7 @@ export const Route = createFileRoute('/api/auth/callback')({
           const cookieOptions = createCookieOptions(maxAge);
 
           const cookies: string[] = [
-            serializeCookie('oauth_state', '', { path: '/', maxAge: 0 }),
+            serializeCookie('oauth_state', '', { path: cookiePath, maxAge: 0 }),
             serializeCookie('access_token', tokens.access_token, cookieOptions),
             serializeCookie('user_info', JSON.stringify(user), cookieOptions),
           ];
@@ -76,7 +70,7 @@ export const Route = createFileRoute('/api/auth/callback')({
           }
 
           const headers = new Headers();
-          headers.set('Location', `${import.meta.env.BASE_URL}browser`);
+          headers.set('Location', appPath('browser'));
           for (const cookie of cookies) {
             headers.append('Set-Cookie', cookie);
           }
@@ -88,12 +82,7 @@ export const Route = createFileRoute('/api/auth/callback')({
         } catch (err) {
           console.error('Token exchange error:', err);
 
-          return new Response(null, {
-            status: 302,
-            headers: {
-              Location: '/?error=Authentication%20failed',
-            },
-          });
+          return errorRedirect('Authentication failed');
         }
       },
     },

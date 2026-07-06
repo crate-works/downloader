@@ -171,6 +171,7 @@ The application is published as a Docker image to GitHub Container Registry.
 |----------|---------|-------------|
 | `NODE_ENV` | `development` | Environment mode (`development`, `production`, `test`) |
 | `PORT` | `7000` | Server port |
+| `BASE_PATH` | *(root)* | Subpath to serve the app under, e.g. `/downloader` |
 | `OIDC_SCOPES` | `public openid profile email` | OIDC scopes to request |
 | `AWS_REGION` | `ap-southeast-2` | AWS region |
 
@@ -239,9 +240,25 @@ services:
     restart: unless-stopped
 ```
 
+### Serving Under a Subpath
+
+Set `BASE_PATH` to mount the application somewhere other than the domain root:
+
+```yaml
+    environment:
+      - BASE_PATH=/downloader
+      - OIDC_REDIRECT_URI=https://app.example.com/downloader/api/auth/callback
+```
+
+Notes:
+
+- The reverse proxy must pass the prefix through unchanged (no path rewriting), e.g. nginx `proxy_pass http://arocapi-downloader:7000;` with no trailing path.
+- `OIDC_REDIRECT_URI` must include the subpath, and the updated URI must be registered with your OIDC provider.
+- Nested subpaths such as `/apps/downloader` are supported. Changing `BASE_PATH` requires recreating the container (`docker compose up -d` does this automatically).
+
 ### Health Check
 
-The container includes a built-in health check. The application responds on port `7000` at the root path (`/`). You can verify the container is running with:
+The container includes a built-in health check. The application responds on port `7000` at `BASE_PATH` (the root path `/` by default). You can verify the container is running with:
 
 ```bash
 curl http://localhost:7000/

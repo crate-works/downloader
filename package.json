@@ -15,7 +15,7 @@
     "lint:types": "tsc --noEmit",
     "lint:knip": "knip",
     "docker:build": "docker build -t arocapi-downloader:test .",
-    "docker:run": "docker run --rm -p 5173:3000 --env-file .env arocapi-downloader:test",
+    "docker:run": "docker run --rm -p 5173:7000 --env-file .env arocapi-downloader:test",
     "docker:test": "pnpm docker:build && pnpm docker:run"
   },
   "keywords": [

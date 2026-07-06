@@ -1,4 +1,5 @@
 import * as jose from 'jose';
+import { appPath } from '#/shared/paths.ts';
 import { config } from './config.ts';
 
 type OidcConfig = {
@@ -133,7 +134,7 @@ export const getLogoutUrl = async (idTokenHint?: string): Promise<string> => {
   const oidc = await getOidcConfig();
 
   if (!oidc.end_session_endpoint) {
-    return '/';
+    return appPath();
   }
 
   const url = new URL(oidc.end_session_endpoint);
@@ -144,7 +145,7 @@ export const getLogoutUrl = async (idTokenHint?: string): Promise<string> => {
 
   // Build post-logout redirect URI from the configured redirect URI
   const redirectUrl = new URL(config.OIDC_REDIRECT_URI);
-  redirectUrl.pathname = '/';
+  redirectUrl.pathname = appPath();
   redirectUrl.search = '';
   url.searchParams.set('post_logout_redirect_uri', redirectUrl.toString());
 

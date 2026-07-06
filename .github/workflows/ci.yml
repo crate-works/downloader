@@ -56,6 +56,42 @@ jobs:
         with:
           context: .
           push: false
+          load: true
           tags: arocapi-downloader:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Smoke test image at root and under a subpath
+        run: |
+          set -eu
+          for bp in "" "/downloader"; do
+            echo "--- Testing BASE_PATH='${bp}' ---"
+            cid=$(docker run -d -p 7000:7000 \
+              -e BASE_PATH="${bp}" \
+              -e NODE_ENV=production \
+              -e ROCRATE_API_BASE_URL=https://api.example.com \
+              -e OIDC_ISSUER=https://idp.example.com \
+              -e OIDC_CLIENT_ID=smoke-test \
+              -e OIDC_CLIENT_SECRET=smoke-test \
+              -e OIDC_REDIRECT_URI=https://app.example.com${bp}/api/auth/callback \
+              -e SESSION_SECRET=smoke-test-secret-0123456789abcdef \
+              -e S3_BUCKET=smoke-test \
+              -e EMAIL_FROM=noreply@example.com \
+              arocapi-downloader:test)
+
+            if ! html=$(curl -fsS --retry 30 --retry-delay 1 --retry-all-errors "http://localhost:7000${bp}/"); then
+              echo "FAIL: app did not respond at http://localhost:7000${bp}/"
+              docker logs "$cid"
+              exit 1
+            fi
+            if echo "$html" | grep -q '__BASE_PATH__'; then
+              echo "FAIL: residual base path token in served HTML"
+              exit 1
+            fi
+            if ! echo "$html" | grep -q "${bp}/assets/"; then
+              echo "FAIL: asset URLs missing expected prefix '${bp}/assets/'"
+              exit 1
+            fi
+
+            docker rm -f "$cid" >/dev/null
+          done

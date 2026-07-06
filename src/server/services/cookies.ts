@@ -1,4 +1,5 @@
 import { getRequest } from '@tanstack/react-start/server';
+import { appPath } from '#/shared/paths.ts';
 
 type CookieOptions = {
   httpOnly?: boolean | undefined;
@@ -8,6 +9,13 @@ type CookieOptions = {
   maxAge?: number | undefined;
   domain?: string | undefined;
 };
+
+/**
+ * Cookie Path scoped to the app's base path so instances hosted at
+ * different subpaths of the same domain don't share auth cookies.
+ * Cookies use the bare path, without the trailing slash appPath carries.
+ */
+export const cookiePath = appPath().replace(/\/$/, '') || '/';
 
 /**
  * Parse cookies from a Cookie header string
