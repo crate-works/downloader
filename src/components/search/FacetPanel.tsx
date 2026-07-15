@@ -14,7 +14,7 @@ const FACET_LABEL_MAP: Record<string, string> = {
   entity_type: 'Type',
 };
 
-const FACET_ORDER = ['rootCollection', 'languages_with_code', 'countries', 'collector_name', 'entity_type'];
+const FACET_ORDER = ['entity_type', 'rootCollection', 'languages_with_code', 'countries', 'collector_name'];
 
 const filtersEqual = (a: FacetFilters, b: FacetFilters): boolean => {
   const aKeys = Object.keys(a).filter((k) => (a[k]?.length ?? 0) > 0);
