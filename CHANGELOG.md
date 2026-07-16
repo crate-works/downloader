@@ -1,3 +1,5 @@
+## [1.14.4](https://github.com/crate-works/downloader/compare/v1.14.3...v1.14.4) (2026-07-16)
+
 ## [1.14.3](https://github.com/crate-works/downloader/compare/v1.14.2...v1.14.3) (2026-07-16)
 
 ## [1.14.2](https://github.com/crate-works/downloader/compare/v1.14.1...v1.14.2) (2026-07-15)
