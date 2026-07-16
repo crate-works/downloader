@@ -1,4 +1,4 @@
-type MediaType = 'audio/wav' | 'audio/mpeg' | 'video/x-matroska' | 'video/x-msvideo' | 'video/mxf' | string;
+type MediaType = 'audio/wav' | 'audio/mpeg' | 'video/x-matroska' | 'video/x-msvideo' | 'video/mxf' | 'application/mxf' | string;
 
 type QualityTier = 'archival' | 'presentation';
 
@@ -24,7 +24,7 @@ export type RoCrateFile = {
 };
 
 export const ARCHIVAL_AUDIO_TYPES = ['audio/wav', 'audio/x-wav'];
-export const ARCHIVAL_VIDEO_TYPES = ['video/x-matroska', 'video/matroska', 'video/mxf', 'video/x-msvideo'];
+export const ARCHIVAL_VIDEO_TYPES = ['video/x-matroska', 'video/matroska', 'video/mxf', 'video/x-msvideo', 'application/mxf'];
 export const ARCHIVAL_IMAGE_TYPES = ['image/tiff'];
 
 export const getFileType = (mediaType: string): FileType => {
