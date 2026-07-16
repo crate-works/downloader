@@ -32,7 +32,7 @@ export const getFileType = (mediaType: string): FileType => {
     return 'audio';
   }
 
-  if (mediaType.startsWith('video/')) {
+  if (mediaType.startsWith('video/') || mediaType === 'application/mxf') {
     return 'video';
   }
 
