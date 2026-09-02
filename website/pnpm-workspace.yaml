@@ -3,5 +3,6 @@
 # Mirrors the supply-chain hardening from the root pnpm-workspace.yaml.
 allowBuilds:
   esbuild: true
+  sharp: false
 
 minimumReleaseAge: 4320 # 3 days
