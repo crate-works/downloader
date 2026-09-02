@@ -1,6 +1,6 @@
 {
   "name": "arocapi-downloader",
-  "version": "1.14.6",
+  "version": "1.14.7",
   "description": "RO-Crate based collection downloader",
   "type": "module",
   "imports": {

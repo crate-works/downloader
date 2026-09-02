@@ -1,3 +1,9 @@
+## [1.14.7](https://github.com/crate-works/downloader/compare/v1.14.6...v1.14.7) (2026-09-02)
+
+### Bug Fixes
+
+* follow the entity RO-Crate metadata route rename ([1e237fa](https://github.com/crate-works/downloader/commit/1e237fa04bca9403975aafa0190359aaa0c4e5cd))
+
 ## [1.14.6](https://github.com/crate-works/downloader/compare/v1.14.5...v1.14.6) (2026-07-16)
 
 ## [1.14.5](https://github.com/crate-works/downloader/compare/v1.14.4...v1.14.5) (2026-07-16)
