@@ -42,7 +42,7 @@ export const fetchFileStream = async (fileId: string, token?: string, signal?: A
   return Readable.fromWeb(response.body);
 };
 
-export const getEntityMetadata = async (entityId: string, token?: string, signal?: AbortSignal): Promise<Entity> => {
+export const getEntity = async (entityId: string, token?: string, signal?: AbortSignal): Promise<Entity> => {
   const url = buildUrl(`/entity/${encodeURIComponent(entityId)}`);
 
   const response = await fetch(url.toString(), {
@@ -51,14 +51,14 @@ export const getEntityMetadata = async (entityId: string, token?: string, signal
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get entity metadata: ${response.status} ${response.statusText}`);
+    throw new Error(`Failed to get entity: ${response.status} ${response.statusText}`);
   }
 
   return response.json() as Promise<Entity>;
 };
 
-const getEntityRoCrate = async (entityId: string, token?: string, signal?: AbortSignal): Promise<unknown> => {
-  const url = buildUrl(`/entity/${encodeURIComponent(entityId)}/rocrate`);
+const getEntityMetadata = async (entityId: string, token?: string, signal?: AbortSignal): Promise<unknown> => {
+  const url = buildUrl(`/entity/${encodeURIComponent(entityId)}/metadata`);
 
   const response = await fetch(url.toString(), {
     headers: buildHeaders(token, 'application/ld+json'),
@@ -73,7 +73,7 @@ const getEntityRoCrate = async (entityId: string, token?: string, signal?: Abort
 };
 
 export const fetchRoCrateMetadata = async (entityId: string, token?: string, signal?: AbortSignal): Promise<Buffer> => {
-  const rocrate = await getEntityRoCrate(entityId, token, signal);
+  const metadata = await getEntityMetadata(entityId, token, signal);
 
-  return Buffer.from(JSON.stringify(rocrate, null, 2));
+  return Buffer.from(JSON.stringify(metadata, null, 2));
 };

@@ -11,7 +11,7 @@ import {
   updateJobTotalSize,
 } from './jobStore.ts';
 import { sendDownloadEmail } from './services/email.ts';
-import { fetchFileStream, fetchRoCrateMetadata, getEntityMetadata } from './services/rocrate.ts';
+import { fetchFileStream, fetchRoCrateMetadata, getEntity } from './services/rocrate.ts';
 import { deleteFromS3, generatePresignedUrl, uploadStreamToS3 } from './services/s3.ts';
 import { createStreamingZip } from './services/zipper.ts';
 
@@ -55,7 +55,7 @@ const groupFilesByItem = async (
     if (cached) return cached;
 
     console.log(`Fetching metadata for item: ${itemId}`);
-    const itemMetadata = await getEntityMetadata(itemId, accessToken, signal);
+    const itemMetadata = await getEntity(itemId, accessToken, signal);
     const collectionId = itemMetadata.memberOf?.id || 'unknown-collection';
     itemCache.set(itemId, collectionId);
     updateJobGroupProgress(jobId, itemCache.size, totalItems);
