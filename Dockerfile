@@ -1,8 +1,8 @@
 # Stage 1: Install dependencies
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 
-# Enable corepack for pnpm
-RUN corepack enable
+# pnpm switches itself to the packageManager version in package.json
+RUN npm install -g pnpm
 
 WORKDIR /app
 
@@ -13,9 +13,9 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # Stage 2: Build the application
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 
-RUN corepack enable
+RUN npm install -g pnpm
 
 WORKDIR /app
 
@@ -37,9 +37,9 @@ ENV NITRO_APP_BASE_URL=/__BASE_PATH__/
 RUN pnpm build
 
 # Stage 3: Production image
-FROM node:24-alpine AS production
+FROM node:26-alpine AS production
 
-RUN corepack enable
+RUN npm install -g pnpm
 
 WORKDIR /app
 
