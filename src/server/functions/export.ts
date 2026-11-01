@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/tanstackstart-react';
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { getCookie } from '#/server/services/cookies.ts';
@@ -66,6 +67,7 @@ export const submitExport = createServerFn({ method: 'POST' })
     processJob(job).catch((error) => {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`Export job ${jobId} failed:`, error);
+      Sentry.captureException(error, { tags: { jobId } });
       failJob(jobId, message);
     });
 

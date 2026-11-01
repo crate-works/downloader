@@ -1,8 +1,9 @@
 /// <reference types="vite/client" />
-import { createRootRoute, HeadContent, Link, Outlet, Scripts } from '@tanstack/react-router';
+import { createRootRoute, HeadContent, Link, Scripts } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
 import { Header } from '#/components/layout/Header.tsx';
+import { getSentryConfig } from '#/server/functions/sentry.ts';
 import '../styles.css';
 
 function NotFoundComponent() {
@@ -17,21 +18,19 @@ function NotFoundComponent() {
   );
 }
 
+// Escape '<' so the JSON can't close the inline script early
+const serialiseForScript = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
+
 export const Route = createRootRoute({
-  head: () => ({
+  loader: () => getSentryConfig(),
+  staleTime: Number.POSITIVE_INFINITY,
+  head: ({ loaderData }) => ({
     meta: [{ charSet: 'utf-8' }, { name: 'viewport', content: 'width=device-width, initial-scale=1' }, { title: 'Collection Downloader' }],
+    scripts: loaderData ? [{ children: `window.__SENTRY_CONFIG__=${serialiseForScript(loaderData)}` }] : [],
   }),
-  component: RootComponent,
+  shellComponent: RootDocument,
   notFoundComponent: NotFoundComponent,
 });
-
-function RootComponent() {
-  return (
-    <RootDocument>
-      <Outlet />
-    </RootDocument>
-  );
-}
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (

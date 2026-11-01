@@ -73,4 +73,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Start the application
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["node", ".output/server/index.mjs"]
+CMD ["node", "--enable-source-maps", ".output/server/index.mjs"]

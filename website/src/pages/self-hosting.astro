@@ -53,6 +53,9 @@ const optional = [
   ['PORT', '7000', 'Server port'],
   ['OIDC_SCOPES', 'public openid profile email', 'OIDC scopes to request'],
   ['AWS_REGION', 'ap-southeast-2', 'AWS region'],
+  ['SENTRY_DSN', '(none)', 'Sentry DSN; error reporting is off unless set'],
+  ['SENTRY_ENVIRONMENT', 'NODE_ENV', 'Environment name reported to Sentry'],
+  ['SENTRY_TRACES_SAMPLE_RATE', '0', 'Fraction of requests to trace (0–1)'],
 ];
 
 const prerequisites: { name: string; desc: string; href?: string }[] = [

@@ -167,13 +167,16 @@ The application is published as a Docker image to GitHub Container Registry.
 
 #### Optional
 
-| Variable      | Default                       | Description                                            |
-| ------------- | ----------------------------- | ------------------------------------------------------ |
-| `NODE_ENV`    | `development`                 | Environment mode (`development`, `production`, `test`) |
-| `PORT`        | `7000`                        | Server port                                            |
-| `BASE_PATH`   | _(root)_                      | Subpath to serve the app under, e.g. `/downloader`     |
-| `OIDC_SCOPES` | `public openid profile email` | OIDC scopes to request                                 |
-| `AWS_REGION`  | `ap-southeast-2`              | AWS region                                             |
+| Variable                    | Default                       | Description                                                     |
+| --------------------------- | ----------------------------- | --------------------------------------------------------------- |
+| `NODE_ENV`                  | `development`                 | Environment mode (`development`, `production`, `test`)          |
+| `PORT`                      | `7000`                        | Server port                                                     |
+| `BASE_PATH`                 | _(root)_                      | Subpath to serve the app under, e.g. `/downloader`              |
+| `OIDC_SCOPES`               | `public openid profile email` | OIDC scopes to request                                          |
+| `AWS_REGION`                | `ap-southeast-2`              | AWS region                                                      |
+| `SENTRY_DSN`                | _(none)_                      | Sentry DSN for server and browser errors; off unless set        |
+| `SENTRY_ENVIRONMENT`        | value of `NODE_ENV`           | Environment name reported to Sentry                             |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0`                           | Fraction of requests to send as performance traces (`0` to `1`) |
 
 #### AWS Credentials
 

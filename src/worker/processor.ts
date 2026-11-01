@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/tanstackstart-react';
 import { formatFileSize } from '#/shared/formatters.ts';
 import type { ExportFileInfo, ExportItemInfo, ExportJobMessage } from '#/shared/types/index.ts';
 import {
@@ -179,11 +180,16 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
     if (!signal.aborted) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`Export pipeline failed: ${message}`, error);
+      Sentry.captureException(error, { tags: { jobId } });
       failJob(jobId, `Export failed: ${message}`);
+      // Swallowed so the export.ts handler doesn't overwrite the job's failure message
       await sendDownloadEmail({
         to: email,
         fileCount: files.length,
         totalSize: formatFileSize(totalSize),
+      }).catch((emailError) => {
+        console.error('Failed to send export failure email:', emailError);
+        Sentry.captureException(emailError, { tags: { jobId } });
       });
 
       return;
