@@ -13,9 +13,7 @@ const { href, label, active, class: extra } = Astro.props;
   href={href}
   class:list={[
     'rounded-lg font-medium transition-colors',
-    active
-      ? 'bg-brand-50 text-brand-700'
-      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+    active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
     extra,
   ]}
 >

@@ -9,7 +9,7 @@ const itemFilesSchema = z.object({
 });
 
 export const getFilesInItem = createServerFn({ method: 'GET' })
-  .inputValidator(itemFilesSchema)
+  .validator(itemFilesSchema)
   .handler(async ({ data }): Promise<RoCrateFile[]> => {
     const token = getCookie('access_token');
 

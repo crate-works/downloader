@@ -14,7 +14,7 @@ const searchSchema = z.object({
 });
 
 export const searchEntities = createServerFn({ method: 'POST' })
-  .inputValidator(searchSchema)
+  .validator(searchSchema)
   .handler(async ({ data }) => {
     const token = getCookie('access_token');
 

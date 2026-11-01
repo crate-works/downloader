@@ -9,7 +9,7 @@ const entitySchema = z.object({
 });
 
 export const getEntity = createServerFn({ method: 'GET' })
-  .inputValidator(entitySchema)
+  .validator(entitySchema)
   .handler(async ({ data }): Promise<Entity> => {
     const token = getCookie('access_token');
 

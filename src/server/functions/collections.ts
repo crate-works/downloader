@@ -9,7 +9,7 @@ const collectionItemsSchema = z.object({
 });
 
 export const getItemsInCollection = createServerFn({ method: 'GET' })
-  .inputValidator(collectionItemsSchema)
+  .validator(collectionItemsSchema)
   .handler(async ({ data }): Promise<Entity[]> => {
     const token = getCookie('access_token');
 

@@ -22,12 +22,12 @@ const { columns, rows } = Astro.props;
     </thead>
     <tbody class="divide-y divide-slate-100">
       {rows.map((row) => (
-          <tr>
-            {row.map((cell, i) => (
-              <td class:list={['px-4 py-3', columns[i]?.class]}>{cell}</td>
-            ))}
-          </tr>
-        ))}
+        <tr>
+          {row.map((cell, i) => (
+            <td class:list={['px-4 py-3', columns[i]?.class]}>{cell}</td>
+          ))}
+        </tr>
+      ))}
     </tbody>
   </table>
 </div>

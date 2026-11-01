@@ -40,42 +40,29 @@ const size = hasImage && file ? pngSize(file) : null;
 
 <figure class="my-2">
   {hasImage ? (
-      <img
-        src={src}
-        alt={alt}
-        width={size?.width}
-        height={size?.height}
-        loading="lazy"
-        decoding="async"
-        class="h-auto w-full rounded-xl border border-slate-200 shadow-sm"
-      />
-    ) : (
-      <div
-        class="flex aspect-[16/10] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center"
-        role="img"
-        aria-label={`Screenshot placeholder: ${alt}`}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          width="28"
-          height="28"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          class="text-slate-400"
-          aria-hidden="true"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <circle cx="8.5" cy="8.5" r="1.5" />
-          <path d="m21 15-5-5L5 21" />
-        </svg>
-        <span class="text-sm font-medium text-slate-500">Screenshot: {alt}</span>
-        <span class="text-xs text-slate-400">Placeholder — real image to be added</span>
-      </div>
-    )}
-  {caption && (
-      <figcaption class="mt-2 text-center text-sm text-slate-500">
-        {caption}
-      </figcaption>
-    )}
+    <img
+      src={src}
+      alt={alt}
+      width={size?.width}
+      height={size?.height}
+      loading="lazy"
+      decoding="async"
+      class="h-auto w-full rounded-xl border border-slate-200 shadow-sm"
+    />
+  ) : (
+    <div
+      class="flex aspect-[16/10] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center"
+      role="img"
+      aria-label={`Screenshot placeholder: ${alt}`}
+    >
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" class="text-slate-400" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <path d="m21 15-5-5L5 21" />
+      </svg>
+      <span class="text-sm font-medium text-slate-500">Screenshot: {alt}</span>
+      <span class="text-xs text-slate-400">Placeholder — real image to be added</span>
+    </div>
+  )}
+  {caption && <figcaption class="mt-2 text-center text-sm text-slate-500">{caption}</figcaption>}
 </figure>

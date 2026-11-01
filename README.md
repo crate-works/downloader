@@ -66,11 +66,11 @@ A web application for browsing RO-Crate collections hierarchically, selecting fi
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Run frontend + backend concurrently |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
+| Command      | Description                         |
+| ------------ | ----------------------------------- |
+| `pnpm dev`   | Run frontend + backend concurrently |
+| `pnpm build` | Build for production                |
+| `pnpm start` | Start production server             |
 
 ## Architecture
 
@@ -154,26 +154,26 @@ The application is published as a Docker image to GitHub Container Registry.
 
 #### Required
 
-| Variable | Description | Format |
-|----------|-------------|--------|
-| `ROCRATE_API_BASE_URL` | RO-Crate API endpoint | URL |
-| `OIDC_ISSUER` | OIDC provider issuer URL | URL |
-| `OIDC_CLIENT_ID` | OIDC client identifier | String |
-| `OIDC_CLIENT_SECRET` | OIDC client secret | String |
-| `OIDC_REDIRECT_URI` | OIDC callback URL | URL |
-| `SESSION_SECRET` | Session encryption key | String (min 32 chars) |
-| `S3_BUCKET` | S3 bucket for zip files | String |
-| `EMAIL_FROM` | Sender email address | Email |
+| Variable               | Description              | Format                |
+| ---------------------- | ------------------------ | --------------------- |
+| `ROCRATE_API_BASE_URL` | RO-Crate API endpoint    | URL                   |
+| `OIDC_ISSUER`          | OIDC provider issuer URL | URL                   |
+| `OIDC_CLIENT_ID`       | OIDC client identifier   | String                |
+| `OIDC_CLIENT_SECRET`   | OIDC client secret       | String                |
+| `OIDC_REDIRECT_URI`    | OIDC callback URL        | URL                   |
+| `SESSION_SECRET`       | Session encryption key   | String (min 32 chars) |
+| `S3_BUCKET`            | S3 bucket for zip files  | String                |
+| `EMAIL_FROM`           | Sender email address     | Email                 |
 
 #### Optional
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `NODE_ENV` | `development` | Environment mode (`development`, `production`, `test`) |
-| `PORT` | `7000` | Server port |
-| `BASE_PATH` | *(root)* | Subpath to serve the app under, e.g. `/downloader` |
-| `OIDC_SCOPES` | `public openid profile email` | OIDC scopes to request |
-| `AWS_REGION` | `ap-southeast-2` | AWS region |
+| Variable      | Default                       | Description                                            |
+| ------------- | ----------------------------- | ------------------------------------------------------ |
+| `NODE_ENV`    | `development`                 | Environment mode (`development`, `production`, `test`) |
+| `PORT`        | `7000`                        | Server port                                            |
+| `BASE_PATH`   | _(root)_                      | Subpath to serve the app under, e.g. `/downloader`     |
+| `OIDC_SCOPES` | `public openid profile email` | OIDC scopes to request                                 |
+| `AWS_REGION`  | `ap-southeast-2`              | AWS region                                             |
 
 #### AWS Credentials
 
@@ -223,7 +223,7 @@ services:
   arocapi-downloader:
     image: ghcr.io/paradisec/arocapi-downloader:latest
     ports:
-      - '7000:7000'
+      - "7000:7000"
     environment:
       - NODE_ENV=production
       - ROCRATE_API_BASE_URL=https://api.example.com
@@ -245,9 +245,9 @@ services:
 Set `BASE_PATH` to mount the application somewhere other than the domain root:
 
 ```yaml
-    environment:
-      - BASE_PATH=/downloader
-      - OIDC_REDIRECT_URI=https://app.example.com/downloader/api/auth/callback
+environment:
+  - BASE_PATH=/downloader
+  - OIDC_REDIRECT_URI=https://app.example.com/downloader/api/auth/callback
 ```
 
 Notes:

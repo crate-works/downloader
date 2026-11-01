@@ -20,15 +20,12 @@ import { APP_VERSION, GITHUB_URL, NAV_LINKS, PARADISEC_URL, ROCRATE_URL, SITE_NA
         <h2 class="font-semibold text-slate-900">Pages</h2>
         <ul class="mt-3 space-y-2">
           {NAV_LINKS.map((link) => (
-              <li>
-                <a
-                  href={link.href}
-                  class="text-slate-600 hover:text-brand-600"
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
+            <li>
+              <a href={link.href} class="text-slate-600 hover:text-brand-600">
+                {link.label}
+              </a>
+            </li>
+          ))}
         </ul>
       </div>
       <div>

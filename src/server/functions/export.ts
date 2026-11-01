@@ -37,7 +37,7 @@ type ExportResponse = {
 };
 
 export const submitExport = createServerFn({ method: 'POST' })
-  .inputValidator((data: unknown) => exportRequestSchema.parse(data))
+  .validator((data: unknown) => exportRequestSchema.parse(data))
   .handler(async ({ data }): Promise<ExportResponse> => {
     const accessToken = getCookie('access_token');
 
@@ -77,7 +77,7 @@ export const submitExport = createServerFn({ method: 'POST' })
   });
 
 export const getJobStatus = createServerFn({ method: 'GET' })
-  .inputValidator((data: unknown) => z.object({ jobId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ jobId: z.string().uuid() }).parse(data))
   .handler(async ({ data }): Promise<JobStatus | null> => {
     return getJobStatusFromStore(data.jobId);
   });
@@ -85,7 +85,7 @@ export const getJobStatus = createServerFn({ method: 'GET' })
 // Cooperatively cancel a running export. Authorised by knowledge of the job UUID
 // alone (consistent with getJobStatus), but note this is a destructive capability.
 export const cancelExport = createServerFn({ method: 'POST' })
-  .inputValidator((data: unknown) => z.object({ jobId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ jobId: z.string().uuid() }).parse(data))
   .handler(async ({ data }): Promise<{ success: boolean }> => {
     return { success: cancelJob(data.jobId) };
   });
