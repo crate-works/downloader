@@ -7,9 +7,14 @@ import { PRESIGNED_URL_EXPIRY_SECONDS } from '#/shared/constants.ts';
 
 const s3Client = new S3Client({ region: config.AWS_REGION });
 
+// S3 caps multipart uploads at 10,000 parts; the 5 MiB default limits zips to ~48.8 GiB.
+// 64 MiB parts allow ~625 GiB, at the cost of ~(queueSize + 1) × 64 MiB buffered per upload.
+const UPLOAD_PART_SIZE = 64 * 1024 * 1024;
+
 export const uploadStreamToS3 = async (stream: Readable, key: string, signal?: AbortSignal): Promise<void> => {
   const upload = new Upload({
     client: s3Client,
+    partSize: UPLOAD_PART_SIZE,
     params: {
       Bucket: config.S3_BUCKET,
       Key: key,
