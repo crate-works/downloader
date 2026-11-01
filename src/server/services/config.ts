@@ -3,8 +3,7 @@ import { z } from 'zod/v4';
 // NOTE: Configuration is loaded at startup time.
 // In TanStack Start context, this runs on the server side.
 
-// Treat `VAR=` as unset
-const optional = <T extends z.ZodType>(schema: T) => z.preprocess((value) => (value === '' ? undefined : value), schema.optional());
+const emptyAsUnset = <T extends z.ZodType>(schema: T) => z.preprocess((value) => (value === '' ? undefined : value), schema.optional());
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -24,8 +23,8 @@ const envSchema = z.object({
   S3_BUCKET: z.string().min(1),
   EMAIL_FROM: z.email(),
 
-  SENTRY_DSN: optional(z.url()),
-  SENTRY_ENVIRONMENT: optional(z.string()),
+  SENTRY_DSN: emptyAsUnset(z.url()),
+  SENTRY_ENVIRONMENT: emptyAsUnset(z.string()),
   SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
 });
 
