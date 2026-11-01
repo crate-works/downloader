@@ -4,7 +4,9 @@
     // shadcn/ui component library
     "src/components/ui/**",
     // Marketing/docs site — its own isolated pnpm project, checked separately
-    "website/**"
+    "website/**",
+    // Agent worktrees
+    ".claude/**"
   ],
   "ignoreDependencies": [
     // Used by semantic-release as preset

@@ -1,8 +1,10 @@
+/// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import { nitro } from 'nitro/vite';
 import { defineConfig } from 'vite';
+import { configDefaults } from 'vitest/config';
 
 import packageJson from './package.json' with { type: 'json' };
 
@@ -25,4 +27,7 @@ export default defineConfig({
       },
     }),
   ],
+  test: {
+    exclude: [...configDefaults.exclude, '.claude/**'],
+  },
 });

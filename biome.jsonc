@@ -16,7 +16,7 @@
       // Commitlint config
       "!commitlint.config.mjs",
       // Other
-      "!.claude/"
+      "!!.claude"
     ]
   },
   "formatter": {
