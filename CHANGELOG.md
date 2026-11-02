@@ -1,3 +1,13 @@
+## [1.15.0](https://github.com/crate-works/downloader/compare/v1.14.7...v1.15.0) (2026-11-02)
+
+### Features
+
+* add optional Sentry error reporting ([f2090c9](https://github.com/crate-works/downloader/commit/f2090c91ae5fae3f45ca09eb5813671e6719645d))
+
+### Bug Fixes
+
+* **worker:** upload exports in 64 MiB parts ([f24d26c](https://github.com/crate-works/downloader/commit/f24d26cab9162599ac56c9ebf2f0e68b4234acd1))
+
 ## [1.14.7](https://github.com/crate-works/downloader/compare/v1.14.6...v1.14.7) (2026-09-02)
 
 ### Bug Fixes
