@@ -1,5 +1,5 @@
 # Stage 1: Install dependencies
-FROM node:26-alpine AS deps
+FROM node:lts-alpine AS deps
 
 # pnpm switches itself to the packageManager version in package.json
 RUN npm install -g pnpm
@@ -13,7 +13,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # Stage 2: Build the application
-FROM node:26-alpine AS builder
+FROM node:lts-alpine AS builder
 
 RUN npm install -g pnpm
 
@@ -37,7 +37,7 @@ ENV NITRO_APP_BASE_URL=/__BASE_PATH__/
 RUN pnpm build
 
 # Stage 3: Production image
-FROM node:26-alpine AS production
+FROM node:lts-alpine AS production
 
 RUN npm install -g pnpm
 
