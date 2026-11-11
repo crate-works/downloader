@@ -11,6 +11,8 @@
       "**",
       // Tanstack Start
       "!src/routeTree.gen.ts",
+      // semantic-release
+      "!CHANGELOG.md",
       // shadcn/ui components
       "!src/components/ui/",
       // Commitlint config
