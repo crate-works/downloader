@@ -1,3 +1,9 @@
+## [1.15.1](https://github.com/crate-works/downloader/compare/v1.15.0...v1.15.1) (2026-11-12)
+
+### Bug Fixes
+
+* track Node LTS and rebuild the image weekly ([2679c8a](https://github.com/crate-works/downloader/commit/2679c8a54ce1e2bb6ac4b6e55ac631e39ee0dc3f))
+
 ## [1.15.0](https://github.com/crate-works/downloader/compare/v1.14.7...v1.15.0) (2026-11-02)
 
 ### Features
