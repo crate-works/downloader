@@ -1,8 +1,6 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": [
-    // shadcn/ui component library
-    "src/components/ui/**",
     // Marketing/docs site — its own isolated pnpm project, checked separately
     "website/**",
     // Agent worktrees
