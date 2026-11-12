@@ -1,3 +1,9 @@
+## [1.15.2](https://github.com/crate-works/downloader/compare/v1.15.1...v1.15.2) (2026-11-12)
+
+### Dependencies
+
+* **deps:** upgrade dependencies, including nitro 3.0.261103-rc ([7d2b20e](https://github.com/crate-works/downloader/commit/7d2b20ea7d1acd710060676c5faf6d6d8c493701))
+
 ## [1.15.1](https://github.com/crate-works/downloader/compare/v1.15.0...v1.15.1) (2026-11-12)
 
 ### Bug Fixes
