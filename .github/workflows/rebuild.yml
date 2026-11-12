@@ -1,0 +1,37 @@
+name: Rebuild image
+
+# Rebuilds the latest release on a fresh node:lts-alpine base so Node and
+# Alpine security patches ship without waiting for a new release.
+on:
+  schedule:
+    - cron: "0 18 * * 0"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  latest-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          TAG=$(gh release view --repo "$REPO" --json tagName --jq .tagName)
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+  docker:
+    needs: latest-release
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    uses: ./.github/workflows/docker.yml
+    with:
+      version: ${{ needs.latest-release.outputs.version }}
