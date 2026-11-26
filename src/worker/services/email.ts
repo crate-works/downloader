@@ -1,7 +1,25 @@
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
+import { createTransport, type Transporter } from 'nodemailer';
 import { config } from '#/server/services/config.ts';
 
-const sesClient = new SESClient({ region: config.AWS_REGION });
+const createMailTransport = (): Transporter => {
+  if (!config.SMTP_URL) {
+    return createTransport({ SES: { sesClient: new SESv2Client({ region: config.AWS_REGION }), SendEmailCommand } });
+  }
+
+  const { protocol, username } = new URL(config.SMTP_URL);
+
+  return createTransport({
+    url: config.SMTP_URL,
+    // Never send credentials in plain text; nodemailer otherwise only upgrades when the server offers STARTTLS.
+    requireTLS: protocol === 'smtp:' && username !== '',
+    connectionTimeout: 30_000,
+    greetingTimeout: 30_000,
+    socketTimeout: 60_000,
+  });
+};
+
+const transport = createMailTransport();
 
 type MissingFile = {
   filename: string;
@@ -127,28 +145,5 @@ export const sendDownloadEmail = async ({ to, downloadUrl, fileCount, totalSize,
         'This link will expire in 24 hours.',
       ].join('\n');
 
-  const command = new SendEmailCommand({
-    Source: config.EMAIL_FROM,
-    Destination: {
-      ToAddresses: [to],
-    },
-    Message: {
-      Subject: {
-        Data: subject,
-        Charset: 'UTF-8',
-      },
-      Body: {
-        Html: {
-          Data: htmlBody.trim(),
-          Charset: 'UTF-8',
-        },
-        Text: {
-          Data: textBody.trim(),
-          Charset: 'UTF-8',
-        },
-      },
-    },
-  });
-
-  await sesClient.send(command);
+  await transport.sendMail({ from: config.EMAIL_FROM, to, subject, html: htmlBody.trim(), text: textBody.trim() });
 };

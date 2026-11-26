@@ -14,13 +14,14 @@ A web application for browsing RO-Crate collections hierarchically, selecting fi
 - **Frontend:** React 19, TanStack Router, TanStack Query, Tailwind CSS, shadcn/ui
 - **Backend:** TanStack Start (SSR React framework with server functions)
 - **State Management:** Jotai (atomic state management)
-- **Infrastructure:** AWS S3 (zip storage), AWS SES (email)
+- **Infrastructure:** AWS S3 or an S3-compatible store (zip storage), AWS SES or SMTP (email)
 
 ## Prerequisites
 
 - Node.js 22+
 - pnpm
-- AWS account with S3 and SES configured
+- S3 bucket (AWS or S3-compatible, such as Versity Gateway)
+- AWS SES or an SMTP server for sending email
 - OIDC provider for authentication
 
 ## Setup
@@ -92,7 +93,7 @@ A web application for browsing RO-Crate collections hierarchically, selecting fi
 2. Server functions fetch data from RO-Crate API with user's access token
 3. Export request triggers in-process background job
 4. Processor downloads files, creates zip, uploads to S3
-5. Email with presigned download link sent via SES
+5. Email with presigned download link sent via SES, or SMTP when `SMTP_URL` is set
 
 ## Project Structure
 
@@ -114,9 +115,31 @@ src/
 
 Create a bucket for storing zip files. Configure lifecycle rules to auto-delete files after 24-48 hours.
 
+To use an S3-compatible store such as Versity Gateway instead of AWS S3, set `AWS_ENDPOINT_URL_S3` to its endpoint (read by the AWS SDK).
+Bucket URLs are virtual-hosted (`bucket.endpoint`) unless the endpoint is an IP address, so the store must serve buckets at that hostname.
+
 ### SES
 
 Verify your sender email address or domain. Ensure you're out of the SES sandbox for production use.
+The Downloader sends raw messages through the SES v2 `SendEmail` API, so grant `ses:SendEmail` and `ses:SendRawEmail` on the sender identity.
+Not needed when sending through SMTP.
+
+### SMTP
+
+Set `SMTP_URL` to send email through an SMTP server instead of SES:
+
+- `smtp://user:pass@relay.example.org:587` requires STARTTLS before logging in (without credentials, it upgrades when the server offers it)
+- `smtps://user:pass@relay.example.org:465` uses TLS from the start
+- Leave out `user:pass@` for relays that authenticate by IP address
+- Percent-encode special characters in the username and password, e.g. `@` as `%40`
+
+**Gmail:** `smtps://you%40gmail.com:APP_PASSWORD@smtp.gmail.com:465`, using an
+[app password](https://support.google.com/accounts/answer/185833) (requires 2-Step Verification).
+`EMAIL_FROM` must be the Gmail address or a verified "Send mail as" alias, otherwise Gmail rewrites the sender.
+Gmail limits sending to about 500 messages a day (about 2,000 for Google Workspace).
+
+**Google Workspace SMTP relay:** `smtp://smtp-relay.gmail.com:587`, with the server's IP address allowed by a
+Workspace admin.
 
 ## Deployment
 
@@ -167,16 +190,18 @@ The application is published as a Docker image to GitHub Container Registry.
 
 #### Optional
 
-| Variable                    | Default                       | Description                                                     |
-| --------------------------- | ----------------------------- | --------------------------------------------------------------- |
-| `NODE_ENV`                  | `development`                 | Environment mode (`development`, `production`, `test`)          |
-| `PORT`                      | `7000`                        | Server port                                                     |
-| `BASE_PATH`                 | _(root)_                      | Subpath to serve the app under, e.g. `/downloader`              |
-| `OIDC_SCOPES`               | `public openid profile email` | OIDC scopes to request                                          |
-| `AWS_REGION`                | `ap-southeast-2`              | AWS region                                                      |
-| `SENTRY_DSN`                | _(none)_                      | Sentry DSN for server and browser errors; off unless set        |
-| `SENTRY_ENVIRONMENT`        | value of `NODE_ENV`           | Environment name reported to Sentry                             |
-| `SENTRY_TRACES_SAMPLE_RATE` | `0`                           | Fraction of requests to send as performance traces (`0` to `1`) |
+| Variable                    | Default                       | Description                                                                          |
+| --------------------------- | ----------------------------- | ------------------------------------------------------------------------------------ |
+| `NODE_ENV`                  | `development`                 | Environment mode (`development`, `production`, `test`)                               |
+| `PORT`                      | `7000`                        | Server port                                                                          |
+| `BASE_PATH`                 | _(root)_                      | Subpath to serve the app under, e.g. `/downloader`                                   |
+| `OIDC_SCOPES`               | `public openid profile email` | OIDC scopes to request                                                               |
+| `AWS_REGION`                | `ap-southeast-2`              | AWS region                                                                           |
+| `AWS_ENDPOINT_URL_S3`       | _(AWS S3)_                    | Endpoint of an S3-compatible store, e.g. Versity Gateway                             |
+| `SMTP_URL`                  | _(none)_                      | `smtp://` or `smtps://` URL to send email via SMTP instead of SES; see [SMTP](#smtp) |
+| `SENTRY_DSN`                | _(none)_                      | Sentry DSN for server and browser errors; off unless set                             |
+| `SENTRY_ENVIRONMENT`        | value of `NODE_ENV`           | Environment name reported to Sentry                                                  |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0`                           | Fraction of requests to send as performance traces (`0` to `1`)                      |
 
 #### AWS Credentials
 
