@@ -1,3 +1,9 @@
+## [1.16.0](https://github.com/crate-works/downloader/compare/v1.15.2...v1.16.0) (2026-11-26)
+
+### Features
+
+* **email:** send emails through SMTP when SMTP_URL is set ([#16](https://github.com/crate-works/downloader/issues/16)) ([6ccfba1](https://github.com/crate-works/downloader/commit/6ccfba16ec051fc1ddca9004f4f77d44ae2cd6bc))
+
 ## [1.15.2](https://github.com/crate-works/downloader/compare/v1.15.1...v1.15.2) (2026-11-12)
 
 ### Dependencies
