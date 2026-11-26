@@ -168,8 +168,8 @@ The application is published as a Docker image to GitHub Container Registry.
 
 ### Image Details
 
-- **Registry:** `ghcr.io/paradisec/arocapi-downloader`
-- **Tags:** Version numbers (e.g., `1.0.1`) and `latest`
+- **Registry:** `ghcr.io/crate-works/downloader`
+- **Tags:** Exact version (e.g. `1.15.2`), minor (`1.15`), major (`1`) and `latest`. Pin the major tag to get fixes and features without breaking changes.
 - **Platforms:** `linux/amd64`, `linux/arm64`
 - **Port:** `7000`
 
@@ -221,7 +221,7 @@ docker run -d \
   --name arocapi-downloader \
   -p 7000:7000 \
   --env-file .env \
-  ghcr.io/paradisec/arocapi-downloader:latest
+  ghcr.io/crate-works/downloader:latest
 ```
 
 **With inline environment variables:**
@@ -241,7 +241,7 @@ docker run -d \
   -e AWS_REGION=ap-southeast-2 \
   -e AWS_ACCESS_KEY_ID=your-access-key \
   -e AWS_SECRET_ACCESS_KEY=your-secret-key \
-  ghcr.io/paradisec/arocapi-downloader:latest
+  ghcr.io/crate-works/downloader:latest
 ```
 
 **Docker Compose:**
@@ -249,7 +249,7 @@ docker run -d \
 ```yaml
 services:
   arocapi-downloader:
-    image: ghcr.io/paradisec/arocapi-downloader:latest
+    image: ghcr.io/crate-works/downloader:latest
     ports:
       - "7000:7000"
     environment:
