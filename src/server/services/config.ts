@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 
 // NOTE: Configuration is loaded at startup time.
 // In TanStack Start context, this runs on the server side.
@@ -22,6 +22,7 @@ const envSchema = z.object({
   AWS_REGION: z.string().default('ap-southeast-2'),
   S3_BUCKET: z.string().min(1),
   EMAIL_FROM: z.email(),
+  SMTP_URL: emptyAsUnset(z.url({ protocol: /^smtps?$/ })),
 
   SENTRY_DSN: emptyAsUnset(z.url()),
   SENTRY_ENVIRONMENT: emptyAsUnset(z.string()),

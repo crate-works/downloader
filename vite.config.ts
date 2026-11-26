@@ -32,18 +32,26 @@ export default defineConfig({
     // react's vite plugin must come after start's vite plugin
     viteReact(),
     tailwindcss(),
-    nitro({
-      sourcemap: true,
-      // Externalise yazl and buffer-crc32 to avoid CJS/ESM interop issues where
-      // Rollup wraps buffer-crc32's default export in a namespace object, breaking
-      // crc32.unsigned() calls
-      rollupConfig: {
-        external: ['yazl', 'buffer-crc32'],
-        plugins: [chainServiceSourcemaps],
-      },
-    }),
+    // Under vitest, nitro stops packages in node_modules from loading ("Cannot find module").
+    ...(process.env.VITEST
+      ? []
+      : [
+          nitro({
+            sourcemap: true,
+            // Externalise yazl and buffer-crc32 to avoid CJS/ESM interop issues where
+            // Rollup wraps buffer-crc32's default export in a namespace object, breaking
+            // crc32.unsigned() calls
+            rollupConfig: {
+              external: ['yazl', 'buffer-crc32'],
+              plugins: [chainServiceSourcemaps],
+            },
+          }),
+        ]),
   ],
   test: {
     exclude: [...configDefaults.exclude, '.claude/**'],
+    setupFiles: ['./src/test/setup.ts'],
+    unstubEnvs: true,
+    restoreMocks: true,
   },
 });
